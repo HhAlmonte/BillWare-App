@@ -1,0 +1,66 @@
+﻿@page "/category/index"
+
+@inject ICategoryService _categoryService
+@inject DialogService DialogService;
+
+<h3>Categorias</h3>
+
+<hr />
+
+<RadzenButton Text="AGREGAR" Click="OpenDialogForm" class="mb-3 mt-3" Style="background-color:#003053; color: #E0E0E0" />
+
+<RadzenDataGrid Data="Categories"
+                TItem="Category">
+    <EmptyTemplate>
+        <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">No records to display.</p>
+    </EmptyTemplate>
+        <Columns>
+            <RadzenDataGridColumn TItem="Category"
+                                  Property="Name"
+                                  Title="Nombre">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Category"
+                              Property="Description"
+                              Title="Descripción">
+            </RadzenDataGridColumn>
+        </Columns>
+</RadzenDataGrid>
+
+<RadzenPager PageSize="BaseResponse.PageSize"
+             PageNumbersCount="BaseResponse.TotalItems"
+             PageChanged="@(async(e) => await PageIndexChanged(e.PageIndex))"
+             PageSizeOptions="PageSizeOptions"
+             PageSizeText="registros por página"
+             HorizontalAlign="HorizontalAlign.Left">
+</RadzenPager>
+
+@code {
+    private BaseResponseModel<Category> BaseResponse { get; set; } = new BaseResponseModel<Category>();
+    private List<Category> Categories { get; set; } = new List<Category>();
+    private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 10, 20, 50 };
+
+    private int PageSize { get; set; } = 10;
+    private int PageIndex { get; set; } = 1;
+
+    private async Task LoadData(int pageIndex, int pageSize = 10)
+    {
+        BaseResponse = await _categoryService.GetCategories(pageIndex, pageSize);
+        Categories = BaseResponse.Items;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData(PageIndex);
+    }
+
+    private async Task PageIndexChanged(int pageIndex)
+    {
+        PageIndex = pageIndex;
+        await LoadData(PageIndex, PageSize);
+    }
+
+    private async Task OpenDialogForm()
+    {
+        await DialogService.OpenAsync<CategoryForm>("Agregar categoría");
+    }
+}

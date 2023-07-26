@@ -1,0 +1,21 @@
+﻿<EditForm Model="@category" OnValidSubmit="@HandleValidSubmit">
+    <div class="row">
+        <div class="col">
+            <RadzenLabel Text="Nombre" />
+            <RadzenTextBox @bind-Value="@category.Name" />
+        </div>
+        <div class="col">
+            <RadzenLabel Text="Descripción" />
+            <RadzenTextBox @bind-Value="@category.Description" />
+        </div>
+    </div>
+    <RadzenButton Text="Guardar" ButtonType="ButtonType.Submit" />
+</EditForm>
+
+@code {
+    private Category category = new Category(); 
+
+    private void HandleValidSubmit()
+    {
+    }
+}
