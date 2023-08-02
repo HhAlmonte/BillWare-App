@@ -1,0 +1,111 @@
+﻿@inject IInventoryService _inventoryService
+@inject ICategoryService _categoriesService
+@inject DialogService DialogService
+
+<EditForm Model="@Inventory" OnValidSubmit="OnSubmit">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Nombre"></RadzenLabel>
+                <RadzenTextBox @bind-Value="@Inventory.Name" class="form-control" />
+            </div>
+            <div class="form-group">
+                <RadzenLabel Text="Descripción" class="mt-3"></RadzenLabel>
+                <RadzenTextBox @bind-Value="@Inventory.Description" class="form-control" />
+            </div>
+            <div class="form-group">
+                <RadzenLabel Text="Modelo" class="mt-3"></RadzenLabel>
+                <RadzenTextBox @bind-Value="@Inventory.Model" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Precio"></RadzenLabel>
+                <RadzenNumeric @bind-Value="@Inventory.Price" class="form-control" />
+            </div>
+            <div class="form-group">
+                <RadzenLabel Text="Categoría" class="mt-3"></RadzenLabel>
+                <RadzenDropDown FilterOperator="StringFilterOperator.StartsWith" 
+                                AllowFiltering="true" 
+                                @bind-Value="@Inventory.CategoryId" 
+                                Data="@categories" 
+                                TextProperty="Name" 
+                                ValueProperty="Id" 
+                                class="form-control" />
+            </div>
+        </div>
+    </div>
+    <div class="form-group text-center mt-3">
+        <RadzenButton Text="@ButtonTitle" ButtonType="ButtonType.Submit" Style="background-color:#003053; color: #FFF" />
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public Common.FormMode FormMode { get; set; }
+
+    [Parameter]
+    public Inventory InventoryParameter { get; set; } = new Inventory();
+
+    private List<Category> categories = new List<Category>();
+    private Inventory Inventory = new Inventory();
+    private string ButtonTitle => FormMode == Common.FormMode.ADD ? "Agregar" : "Editar";
+
+    private async Task OnSubmit()
+    {
+        if (FormMode == Common.FormMode.ADD)
+        {
+            await Add();
+        }
+        else
+        {
+            await Edit();
+        }
+    }
+
+    private async Task Add()
+    {
+        var action = await _inventoryService.CreateInvetory(Inventory);
+
+        if (!action.IsSuccessStatusCode)
+        {
+            await SweetAlertServices.ShowErrorAlert("Ocurrió un error", await action.Content.ReadAsStringAsync());
+        }
+        else
+        {
+            var closeReturn = action != null ? true : false;
+
+            DialogService.Close(closeReturn);
+        }
+    }
+
+    private async Task Edit()
+    {
+        var action = await _inventoryService.EditInventory(Inventory);
+
+        var closeReturn = action != null ? true : false;
+
+        DialogService.Close(closeReturn);
+    }
+
+    private async Task LoadCategories()
+    {
+        var categories = await _categoriesService.GetCategories(1, 10000000);
+
+        if (categories != null)
+        {
+            this.categories = categories.Items;
+        }
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (FormMode == Common.FormMode.EDIT)
+        {
+            Inventory = InventoryParameter;
+        }
+
+        await LoadCategories();
+    }
+}

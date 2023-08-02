@@ -1,0 +1,298 @@
+﻿@inject IVehiculoEntranceService _vehiculoEntranceService;
+@inject IInventoryService _inventoryService;
+@inject IVehicleService _vehicleService;
+@inject IBillingService _billingService;
+@inject DialogService DialogService;
+
+<EditForm Model="Billing" OnValidSubmit="OnSubmit">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Tipo de facturación" />
+                <RadzenDropDown class="form-control"
+                                @bind-Value="Billing.BillingType"
+                                TextProperty="Name"
+                                ValueProperty="Id"
+                                Data="BillingTypeDropdown.GetBillingTypeDropdowns()"/>
+            </div>
+        </div>
+
+        @if(Billing.BillingType == 2)
+        {
+            <div class="col-md-6">
+                <div class="form-group">
+                    <RadzenLabel Text="Selecciona cliente" />
+                    <RadzenDropDown class="form-control"
+                                @bind-Value="VehicleSelectedId"
+                                ValueProperty="Id"
+                                TextProperty="Costumer.FullName"
+                                Data="VehicleEntrance"
+                                FilterOperator="StringFilterOperator.StartsWith"
+                                AllowFiltering="true"
+                                SearchTextChanged="@(async(e) => await GetVehicleBySearch(e))" 
+                                Change="@((e) => OnVehicleSelected())" />
+                </div>
+            </div>
+        }
+
+        @if (Billing.BillingType == 1)
+        {
+            <div class="col-md-6">
+                <div class="form-group">
+                    <RadzenLabel Text="Introducir el nombre del cliente" />
+                    <RadzenTextBox class="form-control"
+                               @bind-Value="Billing.FullName"
+                               Placeholder="Nombre del cliente" />
+                </div>
+            </div>
+        }
+    </div>
+    <div class="row">
+        @if (Billing.BillingType == 1)
+        {
+            <div class="col-md-6 mt-3">
+                <div class="form-group">
+                    <RadzenLabel Text="Selecciona productos" />
+                    <RadzenDropDown class="form-control"
+                                TValue="List<Inventory>"
+                                TextProperty="Name"
+                                Data="Inventories"
+                                ValueChanged="@((e) => OnInventorySelected(e))"
+                                Multiple="true"
+                                FilterOperator="StringFilterOperator.StartsWith"
+                                AllowFiltering="true"
+                                SearchTextChanged="@(async(e) => await GetVehicleBySearch(e))" />
+                </div>
+            </div>
+        }
+
+        @if (VehicleSelectedId != 0 || Billing.BillingType == 1)
+        {
+            <div class="container mt-4">
+                <RadzenLabel Style="font-size: 20px" Text="Productos a facturar" />
+
+                <hr />
+                <RadzenDataGrid TItem="BillingItemModel"
+                                Data="BillingItems"
+                                AllowPaging
+                                PageSize="5" @ref="grid">
+                <Columns>
+                    <RadzenDataGridColumn TItem="BillingItemModel"
+                                          Title="Producto Id">
+                        <Template Context="data">
+                            @data.ItemId.ToString("D3")
+                        </Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn TItem="BillingItemModel"
+                                          Property="ItemName"
+                                          Title="Producto" 
+                                          Width="250px"/>
+
+                    <RadzenDataGridColumn TItem="BillingItemModel"
+                                          Property="Price"
+                                          Title="Precio" />
+
+                    <RadzenDataGridColumn TItem="BillingItemModel"
+                                          Title="Acciones"
+                                          TextAlign="TextAlign.Center">
+                            <Template Context="price">
+                                <RadzenButton ButtonStyle="ButtonStyle.Warning" Text="$" Click="@(async() => await OpenPrecioFormDialog(price.ItemId, price.Price))"/>
+                                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await DeleteProduct(price.ItemId))"/>
+                            </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+                </RadzenDataGrid>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <RadzenLabel Text="Precio total: " />
+                            <RadzenLabel Text="@BillingItems.Sum(x => x.Price).ToString()" />
+                        </div>
+                    </div>
+            </div>
+        }
+    </div>
+    <div class="form-group text-center mt-3">
+        <RadzenButton Text="Registrar" ButtonType="ButtonType.Submit" Style="background-color:#003053; color: #FFF" />
+    </div>
+</EditForm>
+
+@code {
+    private BillingModel Billing = new BillingModel();
+    private List<VehicleEntrance> VehicleEntrance = new List<VehicleEntrance>();
+    private List<Inventory> Inventories = new List<Inventory>();
+    private List<Inventory> InventoriesSelected = new List<Inventory>();
+
+    RadzenDataGrid<BillingItemModel> grid;
+
+    private int VehicleSelectedId { get; set; }
+    private List<BillingItemModel> BillingItems { get; set; } = new List<BillingItemModel>();
+
+    private async Task OnSubmit()
+    {
+        if (Billing.BillingType == 2)
+        {
+            await OnVehicleSubmit();
+        }
+        else
+        {
+            await OnInventorySubmit();
+        }
+    }
+
+    // vehículos
+    private async Task OnVehicleSubmit()
+    {
+        var billing = new BillingModel
+            {
+                FullName = VehicleEntrance.FirstOrDefault(x => x.Id == VehicleSelectedId).Costumer.FullName,
+                TotalPrice = (decimal)BillingItems.Sum(x => x.Price),
+                BillingType = Billing.BillingType,
+                BillingItems = BillingItems.Select(x => new BillingItemModel
+                {
+                    ItemId = x.ItemId,
+                    ItemName = x.ItemName,
+                    Price = x.Price
+                }).ToList()
+            };
+
+        var action = await _billingService.CreateBilling(billing);
+
+        if (!action.IsSuccessStatusCode)
+        {
+            await SweetAlertServices.ShowErrorAlert("Ocurrió un error", await action.Content.ReadAsStringAsync());
+        }
+        else
+        {
+            var closeReturn = action != null ? true : false;
+
+            DialogService.Close(closeReturn);
+        }
+    }
+    private async Task LoadVehicleEntrances()
+    {
+        var result = await _vehiculoEntranceService.GetVehiculoEntrance(1, 50);
+
+        VehicleEntrance = result.Items;
+    }
+    private async Task GetVehicleBySearch(string searchText)
+    {
+        var result = await _vehiculoEntranceService.GetVehicleEntranceWithParams(searchText, 1, 100);
+
+        VehicleEntrance = result.Items;
+    }                                           
+    private void OnVehicleSelected()
+    {
+        var vehicles = VehicleEntrance.Where(x => x.Id == VehicleSelectedId).SelectMany(x => x.Vehicles).ToList();
+
+        foreach (var v in vehicles)
+        {
+            BillingItems.Add(new BillingItemModel
+            {
+                ItemName = $"{v?.Brand} - {v?.Model} - {v?.Color} ({v?.Year})",
+                ItemId = v.Id
+            });
+        }
+
+        StateHasChanged();
+
+        grid.Reload();
+    }
+
+    // inventarios
+    private async Task LoadInventories()
+    {
+        var result = await _inventoryService.GetInventories(1, 50);
+
+        Inventories = result.Items;
+    }
+    private async Task GetInventoryBySearch(string searchText)
+    {
+        var result = await _inventoryService.GetInventoryWithSearch(searchText, 1, 100);
+
+        Inventories = result.Items;
+    }
+    private void OnInventorySelected(object inventorySelected)
+    {
+        BillingItems.Clear();
+
+        InventoriesSelected = (List<Inventory>)inventorySelected;
+
+        foreach (var i in InventoriesSelected)
+        {
+            BillingItems.Add(new BillingItemModel
+                {
+                    ItemName = i.Name,
+                    ItemId = i.Id,
+                    Price = i.Price
+                });
+        }
+
+        StateHasChanged();
+
+        grid.Reload();
+    }
+    private async Task OnInventorySubmit()
+    {
+        var billing = new BillingModel
+        {
+            FullName = Billing.FullName,
+            TotalPrice = (decimal)BillingItems.Sum(x => x.Price),
+            BillingType = Billing.BillingType,
+            BillingItems = BillingItems.Select(x => new BillingItemModel
+            {
+                ItemId = x.ItemId,
+                ItemName = x.ItemName,
+                Price = x.Price
+            }).ToList()
+        };
+
+        var action = await _billingService.CreateBilling(billing);
+
+        if (!action.IsSuccessStatusCode)
+        {
+            await SweetAlertServices.ShowErrorAlert("Ocurrió un error", await action.Content.ReadAsStringAsync());
+        }
+        else
+        {
+            var closeReturn = action != null ? true : false;
+
+            DialogService.Close(closeReturn);
+        }
+    }
+
+    // precios
+    private async Task OpenPrecioFormDialog(int id, decimal? price = 0)
+    {
+        var action = await DialogService.OpenAsync<PriceForm>("Ingresar precio"
+                        ,parameters: new Dictionary<string, object>
+                        {
+                            { "PriceParameter",  price }
+                        }
+                        ,options: new DialogOptions
+                        {
+                            Width = "280px"
+                        });
+
+        if(action != 0)
+        {
+            BillingItems.Where(x => x.ItemId == id).FirstOrDefault().Price = (decimal)action;
+
+            await grid.Reload();
+        }
+    }
+
+    // eliminar
+    private async Task DeleteProduct(int id)
+    {
+        BillingItems.Remove(BillingItems.FirstOrDefault(x => x.ItemId == id));
+
+        await grid.Reload();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInventories();
+        await LoadVehicleEntrances();
+    }
+}

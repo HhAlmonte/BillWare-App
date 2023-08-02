@@ -19,25 +19,25 @@
         </div>
 
         <div class="menu">
-            <div class="enlace" @onclick="ToggleMenu">
+            <div class="enlace" @onclick="@(() => NavigateTo("/"))">
                 <i class="bx bx-grid-alt"></i>
                 <span>Dashboard</span>
             </div>
-            <div class="enlace" @onclick="ToggleMenu">
+            <div class="enlace" @onclick="@(() => NavigateTo("inventory/index"))">
                 <i class="bx bx-store-alt"></i>
                 <span>Inventario</span>
-            </div>
-            <div class="enlace" @onclick="ToggleMenu">
-                <i class="bx bx-user"></i>
-                <span>Clientes</span>
-            </div>
-            <div class="enlace" @onclick="ToggleMenu">
-                <i class="bx bx-car"></i>
-                <span>Vehículo</span>
             </div>
             <div class="enlace" @onclick="@(() => NavigateTo("category/index"))">
                 <i class="bx bx-category"></i>
                 <span>Categorias</span>
+            </div>
+            <div class="enlace" @onclick="@(() => NavigateTo("vehicleEntrance/index"))">
+                <i class="bx bx-car"></i>
+                <span>Vehiculos Entradas</span>
+            </div>
+            <div class="enlace" @onclick="@(() => NavigateTo("billing/index"))">
+                <i class="bx bxs-badge-dollar"></i>
+                <span>Facturación</span>
             </div>
         </div>
     </div>

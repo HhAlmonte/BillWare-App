@@ -13,7 +13,8 @@
 
 .menu-dashboard {
     max-width: 100px;
-    height: 100vh;
+    height: auto;
+    min-height: 100vh;
     background: #003053;
     padding: 20px;
     transition: max-width .3s ease;

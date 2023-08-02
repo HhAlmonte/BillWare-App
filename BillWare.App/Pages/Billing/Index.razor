@@ -1,0 +1,196 @@
+﻿@using BillWare.Application.Billing.Models;
+
+@page "/billing/index"
+@inject IBillingService _billingService;
+@inject DialogService DialogService;
+
+<h3>Facturación</h3>
+
+<hr />
+
+<RadzenButton Text="AGREGAR" class="mb-3 mt-3" Style="background-color:#003053; color: #FFF" Click="@(async() => await OpenAddDialogForm())" />
+
+<RadzenDataGrid Data="Billings"
+                TItem="BillingModel"
+                Responsive="true"
+                AllowColumnResize="true"
+                ExpandMode="DataGridExpandMode.Single">
+    <EmptyTemplate>
+        <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">No records to display.</p>
+    </EmptyTemplate>
+    <Template Context="billingItems">
+        <RadzenCard Style="margin-bottom:20px">
+            productos registrados por el cliente: <b>@billingItems.FullName (@billingItems.BillingItems.Count())   </b>
+        </RadzenCard>
+
+        <RadzenDataGrid Data="@billingItems.BillingItems" TItem="BillingItemModel" AllowPaging PageSize="5">
+            <Columns>
+                <RadzenDataGridColumn TItem="BillingItemModel" Property="ItemName" Title="Producto" />
+                <RadzenDataGridColumn TItem="BillingItemModel" Property="Price" Title="Precio" />
+                <RadzenDataGridColumn TItem="BillingItemModel" Property="CreatedAt" Title="Fecha de registro" />
+
+                <RadzenDataGridColumn TItem="Vehicle" Title="Acciones" TextAlign="TextAlign.Center">
+                    <Template>
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" />
+                        <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </Template>
+
+    <Columns>
+        <RadzenDataGridColumn TItem="BillingModel"
+                              Property="Id"
+                              Title="Identificador">
+            <Template Context="data">
+                @data.Id?.ToString("D3")
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="BillingModel"
+                              Property="FullName"
+                              Title="Cliente">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="BillingModel"
+                              Property="TotalPrice"
+                              Title="Precio total">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="BillingModel"
+                              Property="CreatedAt"
+                              Title="Fecha de registro">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="BillingModel"
+                              Title="Acciones"
+                              Context="data"
+                              TextAlign="TextAlign.Center">
+            <Template Context="actions">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await Delete(actions.Id))"/>
+                <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Click="@(async() => await OpenEditDialogForm(actions))"/>
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+<RadzenPager PageSize="BaseResponse.PageSize"
+             Count="BaseResponse.TotalItems"
+             PageChanged="@(async(e) => await PageIndexChanged(e.PageIndex))"
+             PageSizeOptions="PageSizeOptions"
+             PageSizeText="registros por página"
+             HorizontalAlign="HorizontalAlign.Left"
+             PageSizeChanged="@(async(e) => await PageSizeChanged(e))"
+             ShowPagingSummary="true"
+             PagingSummaryFormat="@pagingSummaryFormat">
+</RadzenPager>
+
+@if (IsLoading)
+{
+    <LoadingOverlay />
+}
+
+@code {
+    private BaseResponseModel<BillingModel> BaseResponse { get; set; } = new BaseResponseModel<BillingModel>();
+    private List<BillingModel> Billings { get; set; } = new List<BillingModel>();
+    private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
+
+    private bool IsLoading { get; set; } = false;
+
+    private int PageSize { get; set; } = 5;
+    private int PageIndex { get; set; } = 1;
+
+    private string pagingSummaryFormat = "Desplegando página {0} de {1} total {2} registros";
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoading = true;
+        await LoadData(PageIndex);
+
+        await Task.Delay(1000);
+        IsLoading = false;
+    }
+
+    private async Task LoadData(int pageIndex, int pageSize = 5)
+    {
+        BaseResponse = await _billingService.GetBilling(pageIndex, pageSize);
+        Billings = BaseResponse.Items;
+    }
+
+    private async Task PageIndexChanged(int pageIndex)
+    {
+        PageIndex = pageIndex + 1;
+
+        await LoadData(PageIndex, PageSize);
+    }
+
+    private async Task PageSizeChanged(int pageSize)
+    {
+        PageSize = pageSize;
+
+        await LoadData(PageIndex, PageSize);
+    }
+
+    private async Task Delete(int? id)
+    {
+        var confirm = await SweetAlertServices.ShowWarningAlert("¿Está seguro de eliminar este registro?", "Confirma de que este sea el registro que deseas eliminar");
+
+        if (confirm)
+        {
+            var response = await _billingService.DeleteBilling((int)id);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData(PageIndex, PageSize);
+                await SweetAlertServices.ShowSuccessAlert("Registro eliminado", "El registro se ha eliminado correctamente");
+            }
+            else
+            {
+                await SweetAlertServices.ShowErrorAlert("Error al eliminar", "Ha ocurrido un error al eliminar el registro");
+            }
+        }
+    }
+
+
+    private async Task OpenAddDialogForm()
+    {
+        var action = await DialogService.OpenAsync<BillingCreateForm>("Registrar factura"
+                        ,options: new DialogOptions
+                        {
+                            Width="800px",
+                            Height="auto",
+                            Draggable = true
+                        });
+
+        if(action != null)
+        {
+            if (action)
+            {
+                await LoadData(PageIndex, PageSize);
+            }
+        }
+    }
+    private async Task OpenEditDialogForm(BillingModel billingParameter)
+    {
+        var action = await DialogService.OpenAsync<BillingEditForm>("Modificar factura"
+                        , options: new DialogOptions
+                            {
+                                Width = "800px",
+                                Height = "auto",
+                                Draggable = true
+                            }
+                        , parameters: new Dictionary<string, object>
+                        {
+                            { "BillingParameter", billingParameter },
+                        });
+
+        if (action != null)
+        {
+            if (action)
+            {
+                await LoadData(PageIndex, PageSize);
+            }
+        }
+    }
+}

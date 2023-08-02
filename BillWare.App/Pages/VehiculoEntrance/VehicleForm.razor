@@ -1,0 +1,117 @@
+﻿@using BillWare.App.Common;
+@inject DialogService DialogService
+@inject IVehicleService _vehicleService
+
+<EditForm Model="@Vehicle" OnValidSubmit="OnSubmit">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Marca"/>
+                <RadzenTextBox @bind-Value="Vehicle.Brand" class="form-control"/>
+            </div>
+            <div class="form-group">
+                <RadzenLabel Text="Modelo" class="mt-3"/>
+                <RadzenTextBox @bind-Value="Vehicle.Model" class="form-control" />
+            </div>
+            <div class="form-group">
+                <RadzenLabel Text="Color" class="mt-3" />
+                <RadzenTextBox @bind-Value="Vehicle.Color" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Año" />
+                <RadzenTextBox @bind-Value="Vehicle.Year" class="form-control" />
+            </div>
+            <div class="form-group">
+                <RadzenLabel Text="Placa" class="mt-3" />
+                <RadzenTextBox @bind-Value="Vehicle.Plate" class="form-control" />
+            </div>
+            <div class="form-group">
+                <RadzenLabel Text="Comentarios" class="mt-3" />
+                <RadzenTextArea @bind-Value="Vehicle.Comments" class="form-control" />
+            </div>
+        </div>
+    </div>
+    <div class="form-group text-center mt-3">
+        <RadzenButton Text="@ButtonTitle" ButtonType="ButtonType.Submit" Style="background-color:#003053; color: #FFF" />
+    </div>
+</EditForm>
+
+@code {
+    private Vehicle Vehicle = new Vehicle();
+    private string ButtonTitle => FormMode == FormMode.ADD ? "Registrar Vehículo" : "Modificar Vehículo";
+
+    [Parameter]
+    public FormMode FormMode { get; set; } = FormMode.ADD;
+
+    [Parameter]
+    public bool IsFormToDatabase { get; set; } = false;
+
+    [Parameter]
+    public Vehicle VehicleParameter { get; set; } = new Vehicle();
+
+    [Parameter]
+    public int VehicleEntranceEntityId { get; set; } = 0;
+
+    private async Task OnSubmit()
+    {
+        if (IsFormToDatabase)
+        {
+            if(FormMode == FormMode.EDIT)
+            {
+                await Edit();
+            }
+            else
+            {
+                await Add();
+            }
+        }
+        else
+        {   
+            DialogService.Close(Vehicle);
+        }
+    }
+
+    private async Task Edit()
+    {
+        var action = await _vehicleService.UpdateVehicle(Vehicle);
+
+        if (!action.IsSuccessStatusCode)
+        {
+            await SweetAlertServices.ShowErrorAlert("Ocurrió un error", await action.Content.ReadAsStringAsync());
+        }
+        else
+        {
+            var closeReturn = action != null ? true : false;
+
+            DialogService.Close(closeReturn);
+        }
+    }
+
+    private async Task Add()
+    {
+        Vehicle.VehicleEntranceEntityId = VehicleEntranceEntityId;
+
+        var action = await _vehicleService.CreateVehicle(Vehicle);
+
+        if (!action.IsSuccessStatusCode)
+        {
+            await SweetAlertServices.ShowErrorAlert("Ocurrió un error", await action.Content.ReadAsStringAsync());
+        }
+        else
+        {
+            var closeReturn = action != null ? true : false;
+
+            DialogService.Close(closeReturn);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        if (FormMode == FormMode.EDIT)
+        {
+            Vehicle = VehicleParameter;
+        }
+    }
+}

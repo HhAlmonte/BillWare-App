@@ -1,21 +1,76 @@
-﻿<EditForm Model="@category" OnValidSubmit="@HandleValidSubmit">
-    <div class="row">
-        <div class="col">
+﻿@inject ICategoryService _categoryService;
+@inject DialogService DialogService;
+
+<EditForm Model="@Category" OnValidSubmit="@OnSubmit">
+    <div class="form-row mb-3">
+        <div class="form-group col mb-2">
             <RadzenLabel Text="Nombre" />
-            <RadzenTextBox @bind-Value="@category.Name" />
+            <RadzenTextBox MaxLength="50" @bind-Value="@Category.Name" class="form-control" Placeholder="Introduce el nombre"/>
         </div>
-        <div class="col">
+        <div class="form-group col">
             <RadzenLabel Text="Descripción" />
-            <RadzenTextBox @bind-Value="@category.Description" />
+            <RadzenTextBox MaxLength="100" @bind-Value="@Category.Description" class="form-control" Placeholder="Introduce la descripción"/>
         </div>
     </div>
-    <RadzenButton Text="Guardar" ButtonType="ButtonType.Submit" />
+    <RadzenButton Text="@ButtonTitle" ButtonType="ButtonType.Submit" Style="background-color:#003053; color: #FFF" />
 </EditForm>
 
-@code {
-    private Category category = new Category(); 
 
-    private void HandleValidSubmit()
+@code {
+    [Parameter]
+    public Common.FormMode FormMode { get; set; }
+
+    [Parameter]
+    public Category CategoryParameter { get; set; } = new Category();
+
+    private Category Category = new Category(); 
+
+    private string ButtonTitle => FormMode == Common.FormMode.ADD ? "Agregar" : "Editar";
+
+    private async void OnSubmit()
     {
+        if (FormMode == Common.FormMode.ADD)
+        {
+            await Add();
+        }
+        else
+        {
+            await Edit();
+        }
+    }
+
+    private async Task Add()
+    {
+        var action = await _categoryService.CreateCategory(Category);
+
+        if (!action.IsSuccessStatusCode)
+        {
+            await SweetAlertServices.ShowErrorAlert("Ocurrió un error", await action.Content.ReadAsStringAsync());
+        }
+        else
+        {
+            var closeReturn = action != null ? true : false;
+
+            DialogService.Close(closeReturn);
+        }
+    }
+
+    private async Task Edit()
+    {
+        var action = await _categoryService.EditCategory(Category);
+
+        var closeReturn = action != null ? true : false;
+
+        DialogService.Close(closeReturn);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (FormMode == Common.FormMode.EDIT)
+        {
+            Category = CategoryParameter;
+        }
+
+        await base.OnInitializedAsync();
     }
 }
