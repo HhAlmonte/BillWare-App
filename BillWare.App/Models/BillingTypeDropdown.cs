@@ -11,8 +11,8 @@
         {
             List<BillingTypeDropdown> billingTypeDropdowns = new List<BillingTypeDropdown>
             {
+                new BillingTypeDropdown { Id = 1, Name = "Inventario" },
                 new BillingTypeDropdown { Id = 2, Name = "Vehículo de Entrada" },
-                new BillingTypeDropdown { Id = 1, Name = "Inventario" }
             };
 
             return billingTypeDropdowns;

@@ -18,6 +18,7 @@ builder.Services.AddScoped<IVehiculoEntranceService, VehiculoEntranceService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IBillingService, BillingService>();
+builder.Services.AddScoped<IBillingItemService, BillingItemService>();
 builder.Services.AddScoped<DialogService>();
 var host = builder.Build();
 SweetAlertServices.Initialize((IJSRuntime)host.Services.GetService(typeof(IJSRuntime)));

@@ -26,7 +26,7 @@
         </div>
     </div>
     <div class="row">
-        @if (Billing.BillingType == 2)
+        @if (Billing.BillingType == 1)
         {
             <div class="col-md-6 mt-3">
                 <div class="form-group">
@@ -38,7 +38,8 @@
                                 ValueChanged="@((e) => OnInventorySelected(e))"
                                 Multiple="true"
                                 FilterOperator="StringFilterOperator.StartsWith"
-                                AllowFiltering="true" />
+                                AllowFiltering="true" 
+                                SearchTextChanged="@(async(e) => await GetInventoryBySearch(e))" />
                 </div>
             </div>
         }
@@ -73,7 +74,6 @@
                                           TextAlign="TextAlign.Center">
                         <Template Context="price">
                             <RadzenButton ButtonStyle="ButtonStyle.Warning" Text="$" Click="@(async() => await OpenPrecioFormDialog(price.ItemId, price.Price))" />
-                            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await DeleteProduct(price.ItemId))" />
                         </Template>
                     </RadzenDataGridColumn>
                 </Columns>
@@ -137,8 +137,6 @@
     }
     private void OnInventorySelected(object inventorySelected)
     {
-        BillingItems.Clear();
-
         InventoriesSelected = (List<Inventory>)inventorySelected;
 
         foreach (var i in InventoriesSelected)
@@ -177,23 +175,15 @@
         }
     }
 
-    // eliminar
-    private async Task DeleteProduct(int id)
-    {
-        BillingItems.Remove(BillingItems.FirstOrDefault(x => x.ItemId == id));
-
-        await grid.Reload();
-    }
-
     protected override async Task OnInitializedAsync()
     {
-        await LoadInventories();
-
         Billing = BillingParameter;
         BillingItems = Billing.BillingItems;
 
         if(BillingParameter.BillingType == 1)
         {
+            await LoadInventories();
+
             foreach (var i in Billing.BillingItems)
             {
                 InventoriesSelected.Add(new Inventory
@@ -205,7 +195,6 @@
 
                 StateHasChanged();
             }
-            OnInventorySelected(InventoriesSelected);
         }
 
         StateHasChanged();

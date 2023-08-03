@@ -61,7 +61,7 @@
                                 Multiple="true"
                                 FilterOperator="StringFilterOperator.StartsWith"
                                 AllowFiltering="true"
-                                SearchTextChanged="@(async(e) => await GetVehicleBySearch(e))" />
+                                SearchTextChanged="@(async(e) => await GetInventoryBySearch(e))" />
                 </div>
             </div>
         }
@@ -94,11 +94,15 @@
                                           Title="Precio" />
 
                     <RadzenDataGridColumn TItem="BillingItemModel"
+                                          Property="Quantity"
+                                          Title="Cantidad" />
+
+                    <RadzenDataGridColumn TItem="BillingItemModel"
                                           Title="Acciones"
                                           TextAlign="TextAlign.Center">
                             <Template Context="price">
                                 <RadzenButton ButtonStyle="ButtonStyle.Warning" Text="$" Click="@(async() => await OpenPrecioFormDialog(price.ItemId, price.Price))"/>
-                                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await DeleteProduct(price.ItemId))"/>
+                                <RadzenButton Visible="Billing.BillingType == 2" ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await DeleteProduct(price.ItemId))"/>
                             </Template>
                     </RadzenDataGridColumn>
                 </Columns>

@@ -36,7 +36,7 @@
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="Inventory"
                               Property="Model"
-                              Title="Dirección">
+                              Title="Modelo">
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="Inventory"
                               Property="Price"
@@ -48,6 +48,10 @@
                 <Template>
                     @Categories.Where(x => x.Id == data.CategoryId).Select(x => x.Name).FirstOrDefault()
                 </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Inventory"
+                              Property="Quantity"
+                              Title="Cantidad">
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="Inventory"
                               Title="Fecha de Creación">
