@@ -4,15 +4,15 @@
 
 @inject IBillingItemService _billingItemService;
 @inject IBillingService _billingService;
-@inject DialogService DialogService;
 @inject IJSRuntime js;
+@inject DialogService DialogService;
 
 <h3>Facturación</h3>
 
 <hr />
 
-<RadzenButton Text="AGREGAR" class="mb-3 mt-3" Style="background-color:#003053; color: #FFF" Click="@(async() => await OpenAddDialogForm())" />
-
+<RadzenButton Text="CREAR FACTURA" class="mb-3 mt-3" Style="background-color:#003053; color: #FFF" Click="@(async() => await OpenAddDialogForm())" />
+<RadzenTextBox Placeholder="Presiona ENTER al buscar" Change="@(async(e) => await GetWithSearch(e))" />
 <RadzenDataGrid Data="Billings"
                 TItem="BillingModel"
                 Responsive="true"
@@ -24,18 +24,40 @@
     <Template Context="billingItems">
         <RadzenCard Style="margin-bottom:20px">
             productos registrados por el cliente: <b>@billingItems.FullName (@billingItems.BillingItems.Count())   </b>
-            <RadzenButton ButtonStyle="ButtonStyle.Warning" Text="Imprimir factura" Click="@(() => PrintInvoice(billingItems))"/>
+
+            @if(billingItems.BillingStatus == (int)Common.BillingStatus.Pendiente)
+            {
+                <RadzenButton ButtonStyle="ButtonStyle.Warning" Text="Imprimir factura" Click="@(() => PrintInvoice(billingItems))"/>
+            }
         </RadzenCard>
 
-        <RadzenDataGrid Data="@billingItems.BillingItems" TItem="BillingItemModel" AllowPaging PageSize="5" @ref="grid">
+        <RadzenDataGrid Data="@billingItems.BillingItems" AllowColumnResize Responsive TItem="BillingItemModel" AllowPaging PageSize="5" @ref="grid">
             <Columns>
-                <RadzenDataGridColumn TItem="BillingItemModel" Property="ItemName" Title="Producto" />
-                <RadzenDataGridColumn TItem="BillingItemModel" Property="Price" Title="Precio" />
-                <RadzenDataGridColumn TItem="BillingItemModel" Property="CreatedAt" Title="Fecha de registro" />
-
-                <RadzenDataGridColumn TItem="BillingItemModel" Title="Acciones" TextAlign="TextAlign.Center">
+                <RadzenDataGridColumn TItem="BillingItemModel" Property="Code" Title="Codigo" />
+                <RadzenDataGridColumn TItem="BillingItemModel" Property="Description" Title="Descripción" />
+                <RadzenDataGridColumn TItem="BillingItemModel" Property="Quantity" Title="Cantidad" />
+                <RadzenDataGridColumn TItem="BillingItemModel" Title="Precio">
+                    <Template Context="price">
+                        @price.Price.ToString("C")
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="BillingItemModel" Title="Impuesto">
+                    <Template Context="price">
+                        @price.Tax.ToString("C")
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="BillingItemModel" Title="Importe">
+                    <Template Context="price">
+                        @price.Amount.ToString("C")
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="BillingItemModel" Property="CreatedAt" Title="Fecha de creación" />
+                <RadzenDataGridColumn TItem="BillingItemModel" Title="Acciones" TextAlign="TextAlign.Center" Visible="billingItems.BillingStatus == (int)Common.BillingStatus.Pendiente">
                     <Template Context="actions">
-                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await DeleteBillingItem(actions.Id))"/>
+                        @if (billingItems.BillingStatus == (int)Common.BillingStatus.Pendiente)
+                        {
+                            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await DeleteBillingItem(actions.Id))"/>
+                        }
                     </Template>
                 </RadzenDataGridColumn>
             </Columns>
@@ -44,11 +66,8 @@
 
     <Columns>
         <RadzenDataGridColumn TItem="BillingModel"
-                              Property="Id"
-                              Title="Identificador">
-            <Template Context="data">
-                @data.Id?.ToString("D3")
-            </Template>
+                              Property="InvoiceNumber"
+                              Title="N. Factura">
         </RadzenDataGridColumn>
 
         <RadzenDataGridColumn TItem="BillingModel"
@@ -57,13 +76,30 @@
         </RadzenDataGridColumn>
 
         <RadzenDataGridColumn TItem="BillingModel"
-                              Property="TotalPrice"
+                              Property="SellerName"
+                              Title="Vendedor">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="BillingModel"
                               Title="Precio total">
+                <Template Context="totalPrice">
+                    @totalPrice.TotalPriceWithTax.ToString("C")
+                </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="BillingModel"
+                              Title="Estatus">
+                <Template Context="status">
+                    @{
+                        var statusName = (Common.BillingStatus)status.BillingStatus;
+                    }
+                    @statusName
+                </Template>
         </RadzenDataGridColumn>
 
         <RadzenDataGridColumn TItem="BillingModel"
                               Property="CreatedAt"
-                              Title="Fecha de registro">
+                              Title="Fecha de creación">
         </RadzenDataGridColumn>
 
         <RadzenDataGridColumn TItem="BillingModel"
@@ -71,8 +107,11 @@
                               Context="data"
                               TextAlign="TextAlign.Center">
             <Template Context="actions">
-                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await Delete(actions.Id))"/>
-                <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Click="@(async() => await OpenEditDialogForm(actions))"/>
+                @if(actions.BillingStatus == (int)Common.BillingStatus.Pendiente)
+                {
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await Delete(actions.Id))" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Click="@(async() => await OpenEditDialogForm(actions))" />
+                }
             </Template>
         </RadzenDataGridColumn>
     </Columns>
@@ -102,9 +141,11 @@
     RadzenDataGrid<BillingItemModel> grid;
 
     private bool IsLoading { get; set; } = false;
-
+    private string Search { get; set; } = string.Empty;
     private int PageSize { get; set; } = 5;
     private int PageIndex { get; set; } = 1;
+
+    private bool IsFiltered { get; set; } = false;
 
     private string pagingSummaryFormat = "Desplegando página {0} de {1} total {2} registros";
 
@@ -127,14 +168,28 @@
     {
         PageIndex = pageIndex + 1;
 
-        await LoadData(PageIndex, PageSize);
+        if (IsFiltered)
+        {
+            await GetWithSearch(Search);
+        }
+        else
+        {
+            await LoadData(PageIndex, PageSize);
+        }
     }
 
     private async Task PageSizeChanged(int pageSize)
     {
         PageSize = pageSize;
 
-        await LoadData(PageIndex, PageSize);
+        if (IsFiltered)
+        {
+            await GetWithSearch(Search);
+        }
+        else
+        {
+            await LoadData(PageIndex, PageSize);
+        }
     }
 
     private async Task Delete(int? id)
@@ -177,15 +232,49 @@
         }
     }
 
+    private async Task GetWithSearch(string search)
+    {
+        IsFiltered = true;
+        Search = search;
+
+        if(Search == "")
+        {
+            IsFiltered = false;
+            await LoadData(PageIndex, PageSize);
+            return;
+        }
+        else
+        {
+            BaseResponse = await _billingService.GetBillingWithSearch(Search, PageIndex, PageSize);
+            Billings = BaseResponse.Items;
+        }
+    }
+
     private async Task PrintInvoice(BillingModel billing)
     {
+        billing.BillingStatus = (int)Common.BillingStatus.Pagado;
+
         var htmlContent = InvoiceToHtml(billing);
 
         await JSRuntimeInvoke.PrintHtml(js, htmlContent);
+
+        var response = await _billingService.UpdateBilling(billing);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadData(PageIndex, PageSize);
+            await SweetAlertServices.ShowSuccessAlert("Factura pagada", "La factura se ha pagado correctamente");
+        }
+        else
+        {
+            await SweetAlertServices.ShowErrorAlert("Error al pagar", "Ha ocurrido un error al pagar la factura");
+        }
     }
 
     private string InvoiceToHtml(BillingModel invoice)
     {
+        var totalPrice = invoice.TotalPrice.ToString("C");
+
         var html = $@"
     <style>
     .invoice-box {{
@@ -321,11 +410,13 @@
 
         foreach (var item in invoice.BillingItems)
         {
+            var price = item.Price.ToString("C");
+
             html += $@"
             <tr class='item'>
-                <td>{item.ItemName}</td>
-                <td>{item.Price}</td>
-                <td>1</td>
+                <td>{item.Description}</td>
+                <td>{totalPrice}</td>
+                <td>{item.Quantity}</td>
                 <td>{item.Price}</td>
             </tr>";
         }
@@ -338,7 +429,7 @@
             </tr>
             <tr class='total'>
                 <td colspan='3'></td>
-                <td>Total: {invoice.TotalPrice}</td>
+                <td>Total: {totalPrice}</td>
             </tr>
         </table>
     </div>";
@@ -348,40 +439,55 @@
 
     private async Task OpenAddDialogForm()
     {
-        var action = await DialogService.OpenAsync<BillingCreateForm>("Registrar factura"
+        var action = await DialogService.OpenAsync<BillingForm>("Crear Factura"
                         ,options: new DialogOptions
                         {
-                            Width="800px",
+                            Width="1080px",
                             Height="auto",
                             Draggable = true
                         });
 
         if(action != null)
         {
-            if (action)
+            var billingResult = action as BillingModel;
+
+            if (billingResult.BillingStatus == 2)
+            {
+                await LoadData(PageIndex, PageSize);
+                await PrintInvoice(billingResult);
+            }
+            else
             {
                 await LoadData(PageIndex, PageSize);
             }
         }
     }
 
-    private async Task OpenEditDialogForm(BillingModel billingParameter)
+    private async Task OpenEditDialogForm(BillingModel billing)
     {
-        var action = await DialogService.OpenAsync<BillingEditForm>("Modificar factura"
+        var action = await DialogService.OpenAsync<BillingForm>("Crear Factura"
                         , options: new DialogOptions
                             {
-                                Width = "800px",
+                                Width = "1080px",
                                 Height = "auto",
                                 Draggable = true
                             }
                         , parameters: new Dictionary<string, object>
-                        {
-                            { "BillingParameter", billingParameter },
-                        });
+                            {
+                            { "FormMode", Common.FormMode.EDIT },
+                            { "BillingParameter", billing }
+                            });
 
         if (action != null)
         {
-            if (action)
+            var billingResult = action as BillingModel;
+
+            if (billingResult.BillingStatus == 2)
+            {
+                await LoadData(PageIndex, PageSize);
+                await PrintInvoice(billingResult);
+            }
+            else
             {
                 await LoadData(PageIndex, PageSize);
             }

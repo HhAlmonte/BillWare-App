@@ -14,13 +14,20 @@ namespace BillWare.App.Services
             _httpClient = http;
         }
 
-        public async Task<HttpResponseMessage> CreateBilling(BillingModel model)
+        public async Task<BillingModel> CreateBilling(BillingModel model)
         {
             try
             {
                 var request = await _httpClient.PostAsJsonAsync("Billing/CreateBilling", model);
 
-                return request;
+                if (request.IsSuccessStatusCode)
+                {
+                    var response = await request.Content.ReadFromJsonAsync<BillingModel>();
+
+                    return response;
+                }
+
+                return null;
             }
             catch (Exception ex)
             {
@@ -46,6 +53,22 @@ namespace BillWare.App.Services
         {
             var response = await _httpClient
                 .GetFromJsonAsync<BaseResponseModel<BillingModel>>($"Billing/GetBillingsPaged?pageIndex={pageIndex}&pageSize={pageSize}");
+
+            return response;
+        }
+
+        public async Task<BaseResponseModel<BillingModel>> GetBillingWithSearch(string search, int pageIndex, int pageSize)
+        {
+            var response = await _httpClient
+                .GetFromJsonAsync<BaseResponseModel<BillingModel>>($"Billing/GetBillingsWithSearchPaged?search={search}&pageIndex={pageIndex}&pageSize={pageSize}");
+
+            return response;
+        }
+
+        public async Task<int> GetLastInvoiceNumber()
+        {
+            var response = await _httpClient
+                .GetFromJsonAsync<int>("Billing/GetInvoiceNumber");
 
             return response;
         }

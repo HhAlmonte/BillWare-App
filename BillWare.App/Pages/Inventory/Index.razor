@@ -1,7 +1,6 @@
 ﻿@page "/inventory/index"
 
 @inject IInventoryService _invetoryService;
-@inject ICategoryService _categoriesService;
 @inject DialogService DialogService;
 
 <h3>Inventario</h3>
@@ -39,22 +38,23 @@
                               Title="Modelo">
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="Inventory"
-                              Property="Price"
                               Title="Precio">
-        </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Inventory"
-                              Title="Categoría"
-                              Context="data">
-                <Template>
-                    @Categories.Where(x => x.Id == data.CategoryId).Select(x => x.Name).FirstOrDefault()
+                <Template Context="price">
+                    @price.Price.ToString("C")
                 </Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="Inventory"
-                              Property="Quantity"
-                              Title="Cantidad">
+                              Title="Categoría"
+                              Property="Category">
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="Inventory"
-                              Title="Fecha de Creación">
+                              Property="Quantity"
+                              Title="Cantidad"
+                              TextAlign="TextAlign.Center">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Inventory"
+                              Title="Fecha de Creación"
+                              Width="220px">
             <Template Context="date">
                 @date.CreatedAt.ToString("dd/MM/yyyy hh:mm")
             </Template>
@@ -91,7 +91,6 @@
 @code {
     private BaseResponseModel<Inventory> BaseResponse { get; set; } = new BaseResponseModel<Inventory>();
     private List<Inventory> Inventories { get; set; } = new List<Inventory>();
-    private List<Category> Categories { get; set; } = new List<Category>();
     private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
     private bool IsLoading { get; set; } = false;
     private bool IsFiltered { get; set; } = false;
@@ -103,6 +102,7 @@
 
     private async Task LoadData(int pageIndex, int pageSize = 5)
     {
+        Search = string.Empty;
         BaseResponse = await _invetoryService.GetInventories(pageIndex, pageSize);
         Inventories = BaseResponse.Items;
     }
@@ -129,7 +129,6 @@
     {
         IsLoading = true;
         await LoadData(PageIndex);
-        await LoadCategories();
 
         await Task.Delay(1000);
         IsLoading = false;
@@ -177,7 +176,17 @@
             }
             else
             {
-                await LoadData(PageIndex, PageSize);
+                if(Inventories.Count == 1 && PageIndex != 1)
+                {
+                    PageIndex -= 1;
+                    await LoadData(PageIndex, PageSize);
+                }
+                else
+                {
+                    await LoadData(PageIndex, PageSize);
+                }
+
+                await SweetAlertServices.ShowSuccessAlert("Registro eliminado", "El registro se eliminó correctamente");
             }
         }
     }
@@ -229,12 +238,5 @@
             await Task.Delay(1000);
             IsLoading = false;
         }
-    }
-
-    private async Task LoadCategories()
-    {
-        var category = await _categoriesService.GetCategories(1, 100000000);
-
-        Categories = category.Items;
     }
 }

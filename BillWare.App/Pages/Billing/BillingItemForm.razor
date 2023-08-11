@@ -1,0 +1,53 @@
+﻿@inject DialogService DialogService
+
+<RadzenTemplateForm TItem="BillingItemModel"
+                    Data="@BillingItem"
+                    Submit="OnSubmit">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Codigo"></RadzenLabel>
+                <RadzenNumeric Name="Code" @bind-Value="BillingItem.Code" class="form-control" />
+                <RadzenRequiredValidator Component="Code" Text="Introducir codigo" Popup="true" Style="position: absolute" />
+            </div>
+            <div class="form-group">
+                <RadzenLabel Text="Descripción"></RadzenLabel>
+                <RadzenTextBox @bind-Value="@BillingItem.Description" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Cantidad"></RadzenLabel>
+                <RadzenNumeric Name="Quantity" @bind-Value="@BillingItem.Quantity" class="form-control" />
+                <RadzenRequiredValidator Component="Quantity" Text="Introducir cantidad" Popup="true" Style="position: absolute" />
+            </div>
+            <div class="form-group">
+                <RadzenLabel Text="Precio"></RadzenLabel>
+                <RadzenNumeric Name="Price" @bind-Value="@BillingItem.Price" class="form-control" />
+                <RadzenRequiredValidator Component="Price" Text="Introducir precio" Popup="true" Style="position: absolute" />
+            </div>
+        </div>
+    </div>
+    <div class="form-group text-center mt-3">
+        <RadzenButton Text="Aceptar" ButtonType="ButtonType.Submit" Style="background-color:#003053; color: #FFF" />
+    </div>
+</RadzenTemplateForm>
+
+@code {
+    [Parameter] public BillingItemModel BillingItemParameter { get; set; } = new BillingItemModel();
+
+    private BillingItemModel BillingItem = new BillingItemModel();
+
+    private void OnSubmit()
+    {
+        DialogService.Close(BillingItem);
+    }
+
+    protected override void OnInitialized()
+    {
+        if (BillingItemParameter != null)
+        {
+            BillingItem = BillingItemParameter;
+        }
+    }
+}

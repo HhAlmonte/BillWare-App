@@ -2,27 +2,29 @@
 @inject IVehicleService _vehicleService
 @inject DialogService DialogService
 
-<EditForm Model="@VehicleEntrance" OnValidSubmit="OnSubmit">
+<RadzenTemplateForm Data="@VehicleEntrance"
+                    TItem="VehicleEntrance"
+                    Submit="OnSubmit">
     <div class="row">
         <RadzenLabel Style="font-size: 20px" class="mb-3" Text="Información del cliente"/>
         <div class="col-md-4">
             <div class="form-group">
                 <RadzenLabel Text="Cédula"></RadzenLabel>
-                <RadzenTextBox @bind-Value="@VehicleEntrance.Costumer.NumberId" class="form-control" />
+                <RadzenTextBox Name="Cedula" @bind-Value="@VehicleEntrance.Costumer.NumberId" class="form-control" />
+                <RadzenRequiredValidator Component="Cedula" Text="Introducir cédula" Popup="false" />
+                <RadzenRegexValidator Component="Cedula" Text="Formato de cédula inválido" Pattern="^(\d{3}-?\d{7}-?\d{1})$" Popup="false" />
             </div>
             <div class="form-group">
                 <RadzenLabel Text="Nombre Completo" class="mt-2"></RadzenLabel>
-                <RadzenTextBox @bind-Value="@VehicleEntrance.Costumer.FullName" class="form-control" />
+                <RadzenTextBox Name="Name" @bind-Value="@VehicleEntrance.Costumer.FullName" class="form-control" />
+                <RadzenRequiredValidator Component="Name" Text="Introducir nombre" Popup="false" />
             </div>
         </div>
         <div class="col-md-4">
             <div class="form-group">
-                <RadzenLabel Text="Correo electrónico"></RadzenLabel>
-                <RadzenTextBox @bind-Value="@VehicleEntrance.Costumer.Email" class="form-control" />
-            </div>
-            <div class="form-group">
                 <RadzenLabel Text="Número de teléfono" class="mt-2"></RadzenLabel>
-                <RadzenTextBox @bind-Value="@VehicleEntrance.Costumer.Phone" class="form-control" />
+                <RadzenTextBox Name="Phone" @bind-Value="@VehicleEntrance.Costumer.Phone" class="form-control" />
+                <RadzenRequiredValidator Component="Phone" Text="Introducir teléfono" Popup="false" />
             </div>
         </div>
         <div class="col-md-4">
@@ -84,7 +86,7 @@
     <div class="form-group text-center mt-3">
         <RadzenButton Text="@ButtonTitle" ButtonType="ButtonType.Submit" Style="background-color:#003053; color: #FFF" />
     </div>
-</EditForm>
+</RadzenTemplateForm>
 
 @code {
     [Parameter]

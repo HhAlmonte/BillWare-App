@@ -1,0 +1,427 @@
+﻿@inject IBillingService _billingService;
+@inject IBillingItemService _billingItemService;
+@inject ICostumerService _costumerService;
+@inject IInventoryService _inventoryService;
+@inject DialogService DialogService;
+
+<RadzenTemplateForm Data="Billing" TItem="BillingModel" Submit="@(async() => await OnSubmit())">
+    <div class="row mb-2">
+        <RadzenFieldset Text="Cliente">
+            <div class="row">
+                <div class="col-md-7">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                        <RadzenLabel Text="Codigo:" Style="width: 100px;" />
+                        <RadzenTextBox @bind-Value="CostumerId" Placeholder="Codigo del cliente" Style="width: 200px;" />
+                        <RadzenButton Icon="search" ButtonStyle="ButtonStyle.Light" class="btn btn-light ml-2" Click="GetCostumer"/>
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
+                        <RadzenLabel Text="Nombre:" Style="width: 100px;" />
+                        <RadzenTextBox @bind-Value="Billing.FullName" Placeholder="Nombre del cliente" Style="width: 200px;" />
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
+                        <RadzenLabel Text="Telefono:" Style="width: 100px;" />
+                        <RadzenTextBox @bind-Value="Billing.Phone" Placeholder="Número del cliente" Style="width: 200px;" />
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
+                        <RadzenLabel Text="Dirección:" Style="width: 100px;" />
+                        <RadzenTextBox @bind-Value="Billing.Address" Placeholder="Dirección del cliente" Style="width: 200px;" />
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
+                        <RadzenLabel Text="Cédula:" Style="width: 100px;" />
+                        <RadzenTextBox @bind-Value="Billing.NumberId" Placeholder="Cédula del cliente" Style="width: 200px;" />
+                    </RadzenStack>
+                </div>
+                <div class="col-md">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
+                        <RadzenLabel Text="Fecha:" Style="width: 100px;" />
+                        <RadzenDatePicker @bind-Value="Billing.CreatedAt" Placeholder="Fecha" Style="width: 200px;" Disabled="true"/>
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
+                        <RadzenLabel Text="N. Factura:" Style="width: 100px;" />
+                        <RadzenTextBox @bind-Value="Billing.InvoiceNumber" Placeholder="Número de factura" Style="width: 200px;" Disabled="true"/>
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
+                        <RadzenLabel Text="Vendedor:" Style="width: 100px;" />
+                        <RadzenTextBox @bind-Value="Billing.SellerName" Placeholder="Nombre del vendedor" Style="width: 200px;" />
+                    </RadzenStack>
+                </div>
+            </div>
+
+        </RadzenFieldset>
+    </div>
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mb-2">
+        <RadzenButton Style="margin-left:-11px;" Icon="add" ButtonStyle="ButtonStyle.Success" Click="@(async() => await OpenInventoryFormDialog())" />
+        <RadzenDropDown class="form-control"
+                        TValue="List<Inventory>"
+                        TextProperty="Name"
+                        Data="Inventories"
+                        ValueChanged="@((e) => OnInventorySelected(e))"
+                        Multiple="true"
+                        FilterOperator="StringFilterOperator.StartsWith"
+                        AllowFiltering="true"
+                        Placeholder="Seleccione productos"
+                        Style="width:250px"
+                        SearchTextChanged="@(async(e) => await GetInventoryBySearch(e))" />
+    </RadzenStack>
+    <div class="row mb-2">
+        <RadzenDataGrid TItem="BillingItemModel"
+                        Data="BillingItems"
+                        AllowPaging
+                        PageSize="5" @ref="grid"
+                        AllowColumnResize
+                        Responsive>
+            <Columns>
+                <RadzenDataGridColumn TItem="BillingItemModel"
+                                      Property="Code"
+                                      Title="Codigo">
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="BillingItemModel"
+                                      Property="Description"
+                                      Title="Descripción"
+                                      Width="220px" />
+
+                <RadzenDataGridColumn TItem="BillingItemModel"
+                                      Property="Quantity"
+                                      Title="Cantidad">
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="BillingItemModel"
+                                      Title="Precio">
+                        <Template Context="price">
+                            @price.Price.ToString("C")
+                        </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="BillingItemModel"
+                                      Title="Impuesto"
+                                      Property="Taxes">
+                        <Template Context="taxes">
+                            @taxes.Tax.ToString("C")
+                        </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="BillingItemModel"
+                                      Title="Importe"
+                                      Property="Amount">
+                        <Template Context="ammount">
+                            @ammount.Amount.ToString("C")
+                        </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="BillingItemModel"
+                                      Title="Acciones"
+                                      TextAlign="TextAlign.Center"
+                                      Width="220px">
+                    <Template Context="billingItem">
+                        <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Click="@(async() => await OpenInventoryFormDialog(billingItem))"/>
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await DeleteBillingItem(billingItem))" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </div>
+    <div class="row">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+            <div class="col-md-1"></div>
+            <div class="col-md-6">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                    <RadzenLabel Text="Pagó con:" Style="width: 100px; margin-right:-40px;" />
+                    <RadzenNumeric Format="C" TValue="decimal" ValueChanged="@((e) => CalcularDevolucion(e))" Placeholder="Pagó con" Style="width: 200px;" />
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
+                    <RadzenLabel Text="Devolver:" Style="width: 100px; margin-right:-40px;" />
+                    <RadzenTextBox @bind-Value="ReturnMoney" Disabled="true" Style="width: 200px;" />
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
+                    <RadzenLabel Text="Neto:" Style="width: 100px; margin-right:-40px;" />
+                    <RadzenNumeric Format="C" @bind-Value="Billing.TotalPriceWithTax" Disabled="true" Style="width: 200px;" />
+                </RadzenStack>
+            </div>
+            <div class="col-md">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                    <RadzenLabel Text="Total:" Style="width: 100px; margin-right:-40px;" />
+                    <RadzenNumeric Format="C" @bind-Value="@Billing.TotalPrice" Disabled="true" Style="width: 200px;" />
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
+                    <RadzenLabel Text="Itbis:" Style="width: 100px; margin-right:-40px;" />
+                    <RadzenNumeric Format="C" @bind-Value="Billing.TotalTax" Disabled="true" Style="width: 200px;" />
+                </RadzenStack>
+            </div>
+        </RadzenStack>
+    </div>
+    <div class="form-group text-center mt-3">
+        <RadzenButton Text="Solo guardar" ButtonType="ButtonType.Submit" Style="background-color:#003053; color: #FFF"/>
+        <RadzenButton Text="Guardar e imprimir" class="ml-3" ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Warning" Click="@(async() => await OnSubmit(2))"/>
+    </div>
+</RadzenTemplateForm>
+
+@code {
+    [Parameter] public BillingModel BillingParameter { get; set; } = new BillingModel();
+    [Parameter] public Common.FormMode FormMode { get; set; } = Common.FormMode.ADD;
+
+    private BillingModel Billing = new BillingModel()
+    {
+        CreatedAt = DateTime.Now
+    };
+
+    RadzenDataGrid<BillingItemModel> grid;
+
+    private List<BillingItemModel> BillingItems { get; set; } = new List<BillingItemModel>();
+
+    private List<Inventory> Inventories { get; set; } = new List<Inventory>();
+
+    private List<Inventory> InventoriesSelected { get; set; } = new List<Inventory>();
+
+    private Common.InvoiceNumberGenerator InvoiceNumberGenerator = new Common.InvoiceNumberGenerator("FACT");
+
+    public string ReturnMoney { get; set; } = "0";
+
+    private string CostumerId { get; set; }
+
+    private async Task GetCostumer()
+    {
+        if (string.IsNullOrEmpty(CostumerId))
+        {
+            await SweetAlertServices.ShowErrorAlert("Codigo invalido", "Primero debe ingresar un código");
+        }
+        else
+        {
+            int costumerId = Convert.ToInt32(CostumerId);
+
+            var costumer = await _costumerService.GetCostumerById(costumerId);
+
+            if (costumer == null)
+            {
+                await SweetAlertServices.ShowErrorAlert("Error", "No se encontró ningun cliente con ese código");
+            }
+            else
+            {
+                Billing.FullName = costumer.FullName;
+                Billing.Address = costumer.Address;
+                Billing.Phone = costumer.Phone;
+                Billing.NumberId = costumer.NumberId;
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadInventories()
+    {
+        var data = await _inventoryService.GetInventories(1, 50);
+
+        Inventories = data.Items;
+
+        StateHasChanged();
+    }
+
+    private async Task OpenInventoryFormDialog(BillingItemModel billingItem = null)
+    {
+        var dialog = await DialogService.OpenAsync<BillingItemForm>("Agregar producto"
+                        ,parameters: new Dictionary<string, object>
+                        {
+                            { "BillingItemParameter", billingItem }
+                        }
+                        ,options: new DialogOptions
+                        {
+                            Width = "auto"
+                        });
+        if(dialog != null)
+        {
+            var billingItemModel = dialog as BillingItemModel;
+
+            if(billingItem == null)
+            {
+                BillingItems.Add(billingItemModel);
+
+                foreach (var i in BillingItems)
+                {
+                    i.Amount = i.Quantity * i.Price;
+                    i.Tax = CalcularITBIS((decimal)i.Quantity * (decimal)i.Price);
+                }
+
+                CalculateNetoAndTotalPrice();
+
+                await grid.Reload();
+            }
+            else
+            {
+                var index = BillingItems.FindIndex(x => x.Code == billingItemModel.Code);
+
+                BillingItems[index] = billingItemModel;
+
+                foreach (var i in BillingItems)
+                {
+                    i.Amount = i.Quantity * i.Price;
+                    i.Tax = CalcularITBIS((decimal)i.Quantity * (decimal)i.Price);
+                }
+
+                CalculateNetoAndTotalPrice();
+
+                await grid.Reload();
+            }
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteBillingItem(BillingItemModel billingItem)
+    {
+        if(FormMode == Common.FormMode.EDIT)
+        {
+            await _billingItemService.DeleteBillingItem(billingItem.Id);
+        }
+        else
+        {
+            var index = BillingItems.FindIndex(x => x.Code == billingItem.Code);
+
+            BillingItems.RemoveAt(index);
+        }
+
+        CalculateNetoAndTotalPrice();
+
+        await grid.Reload();
+    }
+
+    public decimal CalcularITBIS(decimal monto)
+    {
+        decimal porcentajeITBIS = 0.18m;
+        decimal impuestoCalculado = monto * porcentajeITBIS;
+        return impuestoCalculado;
+    }
+
+    public void CalcularDevolucion(decimal monto)
+    {
+        CalculateNetoAndTotalPrice();
+
+        var returnMoney = monto - Billing.TotalPriceWithTax;
+
+        ReturnMoney = returnMoney.ToString("C");
+
+        StateHasChanged();
+    }
+
+    private void CalculateNetoAndTotalPrice()
+    {
+        Billing.TotalPrice = (decimal)BillingItems.Sum(x => x.Amount);
+
+        Billing.TotalPriceWithTax = Billing.TotalPrice + (decimal)BillingItems.Sum(x => x.Tax);
+
+        Billing.TotalTax = (decimal)BillingItems.Sum(x => x.Tax);
+
+        StateHasChanged();
+    }
+
+    private async Task GetInventoryBySearch(string searchText)
+    {
+        var result = await _inventoryService.GetInventoryWithSearch(searchText, 1, 100);
+
+        Inventories = result.Items;
+    }
+
+    private void OnInventorySelected(object inventorySelected)
+    {
+        InventoriesSelected = (List<Inventory>)inventorySelected;
+
+        foreach (var i in InventoriesSelected)
+        {
+            var quantity = 2;
+            var amount = (int)i.Price * quantity;
+
+            BillingItems.Add(new BillingItemModel
+            {
+                Code = i.Id,
+                Description = i.Name,
+                Quantity = quantity,
+                Price = i.Price,
+                
+                Amount = amount,
+
+                Tax = CalcularITBIS(amount)
+            });
+        }
+
+        CalculateNetoAndTotalPrice();
+
+        StateHasChanged();
+
+        grid.Reload();
+    }
+
+    protected override async void OnInitialized()
+    {
+        await LoadInventories();
+
+        if(FormMode == Common.FormMode.EDIT)
+        {
+            Billing = BillingParameter;
+
+            BillingItems = Billing.BillingItems;
+
+            CalculateNetoAndTotalPrice();
+
+            StateHasChanged();
+
+            return;
+        }
+        else
+        {
+            var invoiceNumber = await _billingService.GetLastInvoiceNumber();
+
+            Billing.InvoiceNumber = InvoiceNumberGenerator.GenerateNumber(invoiceNumber);
+
+            CalculateNetoAndTotalPrice();
+
+            StateHasChanged();
+        }
+
+        base.OnInitialized();
+    }
+
+    private async Task Add(int status)
+    {
+        var result = await _billingService.CreateBilling(Billing);
+
+        if (result != null)
+        {
+            await SweetAlertServices.ShowSuccessAlert("Factura creada", "La factura se creó correctamente");
+
+            DialogService.Close(result);
+        }
+        else
+        {
+            await SweetAlertServices.ShowErrorAlert("Error", "Ocurrio un error al crear la factura");
+        }
+    }
+
+    private async Task Edit(int status)
+    {
+        var result = await _billingService.UpdateBilling(Billing);
+
+        if (result.IsSuccessStatusCode)
+        {
+            await SweetAlertServices.ShowSuccessAlert("Factura actualizada", "La factura se modificó correctamente");
+
+            DialogService.Close(result);
+        }
+        else
+        {
+            await SweetAlertServices.ShowErrorAlert("Error", "Ocurrio un error al modificar la factura");
+        }
+    }
+    
+    private async Task OnSubmit(int status = 1)
+    {
+        Billing.BillingItems = BillingItems;
+        Billing.BillingStatus = status;
+
+        if(FormMode == Common.FormMode.ADD)
+        {
+            await Add(status);
+        }
+        else
+        {
+            await Edit(status);
+        }
+    }
+}

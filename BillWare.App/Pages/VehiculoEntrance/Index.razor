@@ -57,10 +57,10 @@
     </Template>
     <Columns>
         <RadzenDataGridColumn TItem="VehicleEntrance"
-                              Property="Id"
+                              Property="Costumer.Id"
                               Title="Identificador">
             <Template Context="data">
-                @data.Id.ToString("D3")
+                @data.Costumer.Id.ToString("D3")
             </Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="VehicleEntrance"
@@ -78,10 +78,6 @@
         <RadzenDataGridColumn TItem="VehicleEntrance"
                               Property="Costumer.NumberId"
                               Title="Cédula">
-        </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="VehicleEntrance"
-                              Property="Costumer.Email"
-                              Title="Correo">
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="VehicleEntrance"
                               Title="Fecha de Creación">
@@ -209,7 +205,16 @@
             }
             else
             {
-                await LoadData(PageIndex, PageSize);
+                if(VehicleEntrance.Count == 1 && PageIndex != 1)
+                {
+                    PageIndex--;
+
+                    await LoadData(PageIndex, PageSize);
+                }
+                else
+                {
+                    await LoadData(PageIndex, PageSize);
+                }
             }
         }
     }
