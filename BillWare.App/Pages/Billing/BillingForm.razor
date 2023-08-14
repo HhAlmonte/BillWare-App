@@ -366,9 +366,16 @@
         }
         else
         {
-            var invoiceNumber = await _billingService.GetLastInvoiceNumber();
+            try
+            {
+                var invoiceNumber = await _billingService.GetLastInvoiceNumber();
 
-            Billing.InvoiceNumber = InvoiceNumberGenerator.GenerateNumber(invoiceNumber);
+                Billing.InvoiceNumber = InvoiceNumberGenerator.GenerateNumber(invoiceNumber);
+            }
+            catch (Exception)
+            {
+                Billing.InvoiceNumber = InvoiceNumberGenerator.GenerateNumber();
+            }
 
             CalculateNetoAndTotalPrice();
 
