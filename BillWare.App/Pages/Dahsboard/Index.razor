@@ -1,7 +1,247 @@
 ﻿@page "/"
 
+@inject IBillingService _billingService;
+@inject IDashboardService _dashboardService;
+
+<h3>Resumen</h3>
+
+<hr />
+
+<div class="row">
+    <div class="col-6">
+        <h5>Ventas de los últimos 30 días</h5>
+        <RadzenChart class="mb-3">
+            <RadzenLineSeries Smooth="true" Data="SalesLast30Days" CategoryProperty="SaleDate" ValueProperty="Amount" RenderingOrder="1">
+                <RadzenMarkers MarkerType="MarkerType.Circle" />
+                <RadzenSeriesDataLabels Visible="true" />
+            </RadzenLineSeries>
+            <RadzenValueAxis Formatter="@FormatAsUSD">
+                <RadzenGridLines Visible="true" />
+            </RadzenValueAxis>
+        </RadzenChart>
+    </div>
+
+    <div class="col-6">
+        <h5>Ventas de los últimos 12 meses</h5>
+        <RadzenChart class="mb-3">
+            <RadzenLineSeries Smooth="true" Data="SalesLast12Month" CategoryProperty="SaleDate" ValueProperty="Amount" RenderingOrder="1">
+                <RadzenMarkers MarkerType="MarkerType.Circle" />
+                <RadzenSeriesDataLabels Visible="true" />
+            </RadzenLineSeries>
+            <RadzenCategoryAxis Padding="20" Formatter="@FormatAsMonth" />
+            <RadzenValueAxis Formatter="@FormatAsUSD">
+                <RadzenGridLines Visible="true" />
+            </RadzenValueAxis>
+        </RadzenChart>
+    </div>
+</div>
+
+<h5>Historial</h5>
+
+<RadzenDataGrid Data="Billings"
+                TItem="BillingModel"
+                Responsive="true"
+                AllowColumnResize="true"
+                ExpandMode="DataGridExpandMode.Single">
+    <EmptyTemplate>
+        <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">No records to display.</p>
+    </EmptyTemplate>
+    <Template Context="billingItems">
+        <RadzenCard Style="margin-bottom:20px">
+            productos registrados por el cliente: <b>@billingItems.FullName (@billingItems.BillingItems.Count())   </b>
+        </RadzenCard>
+
+        <RadzenDataGrid Data="@billingItems.BillingItems" AllowColumnResize Responsive TItem="BillingItemModel" AllowPaging PageSize="5" @ref="grid">
+             <Columns>
+                 <RadzenDataGridColumn TItem="BillingItemModel" Property="Code" Title="Codigo" />
+                 <RadzenDataGridColumn TItem="BillingItemModel" Property="Description" Title="Descripción" />
+                 <RadzenDataGridColumn TItem="BillingItemModel" Property="Quantity" Title="Cantidad" />
+                 <RadzenDataGridColumn TItem="BillingItemModel" Title="Precio">
+                     <Template Context="price">
+                         @price.Price.ToString("C")
+                     </Template>
+                 </RadzenDataGridColumn>
+                 <RadzenDataGridColumn TItem="BillingItemModel" Title="Impuesto">
+                     <Template Context="price">
+                         @price.Tax.ToString("C")
+                     </Template>
+                 </RadzenDataGridColumn>
+                 <RadzenDataGridColumn TItem="BillingItemModel" Title="Importe">
+                     <Template Context="price">
+                         @price.Amount.ToString("C")
+                     </Template>
+                 </RadzenDataGridColumn>
+                 <RadzenDataGridColumn TItem="BillingItemModel" Property="CreatedAt" Title="Fecha de creación" />
+            </Columns>
+        </RadzenDataGrid>
+    </Template>
+
+    <Columns>
+        <RadzenDataGridColumn TItem="BillingModel"
+                              Property="InvoiceNumber"
+                              Title="N. Factura">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="BillingModel"
+                              Property="FullName"
+                              Title="Cliente">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="BillingModel"
+                              Property="SellerName"
+                              Title="Vendedor">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="BillingModel"
+                              Title="Precio total">
+            <Template Context="totalPrice">
+                @totalPrice.TotalPriceWithTax.ToString("C")
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="BillingModel"
+                              Title="Estatus">
+            <Template Context="status">
+                @{
+                    var statusName = (Common.BillingStatus)status.BillingStatus;
+                }
+                @switch (statusName)
+                {
+                    case Common.BillingStatus.Pagado:
+                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Shade="Shade.Lighter" class="price-badge" Text="@statusName.ToString()" />
+                        break;
+                    case Common.BillingStatus.Pendiente:
+                        <RadzenBadge BadgeStyle="BadgeStyle.Danger" Shade="Shade.Lighter" class="price-badge" Text="@statusName.ToString()" />
+                        break;
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="BillingModel"
+                              Property="CreatedAt"
+                              Title="Fecha de creación">
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+<RadzenPager PageSize="BaseResponse.PageSize"
+             Count="BaseResponse.TotalItems"
+             PageChanged="@(async(e) => await PageIndexChanged(e.PageIndex))"
+             PageSizeOptions="PageSizeOptions"
+             PageSizeText="registros por página"
+             HorizontalAlign="HorizontalAlign.Left"
+             PageSizeChanged="@(async(e) => await PageSizeChanged(e))"
+             ShowPagingSummary="true"
+             PagingSummaryFormat="@pagingSummaryFormat">
+</RadzenPager>
+
+@if (IsLoading)
+{
+    <LoadingOverlay />
+}
 
 
 @code {
+    private BaseResponseModel<BillingModel> BaseResponse { get; set; } = new BaseResponseModel<BillingModel>();
+    private List<BillingModel> Billings { get; set; } = new List<BillingModel>();
+    private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
+    RadzenDataGrid<BillingItemModel> grid;
+    private bool IsLoading { get; set; } = false;
+    private int PageSize { get; set; } = 5;
+    private int PageIndex { get; set; } = 1;
+    private string Search { get; set; } = string.Empty;
+    private bool IsFiltered { get; set; } = false;
+    private string pagingSummaryFormat = "Desplegando página {0} de {1} total {2} registros";
+    private List<StatisticsModel> SalesLast30Days { get; set; } = new List<StatisticsModel>();
+    private List<StatisticsModel> SalesLast12Month { get; set; } = new List<StatisticsModel>();
 
+    private async Task LoadData(int pageIndex, int pageSize = 5)
+    {
+        BaseResponse = await _billingService.GetBilling(pageIndex, pageSize);
+        Billings = BaseResponse.Items;
+    }
+    private async Task GetWithSearch(string search)
+    {
+        IsFiltered = true;
+        Search = search;
+
+        if (Search == "")
+        {
+            IsFiltered = false;
+            await LoadData(PageIndex, PageSize);
+            return;
+        }
+        else
+        {
+            BaseResponse = await _billingService.GetBillingWithSearch(Search, PageIndex, PageSize);
+            Billings = BaseResponse.Items;
+        }
+    }
+
+    private async Task LoadSalesLast30Days()
+    {
+        var sales = await _dashboardService.GetSalesLast30Days();
+
+        SalesLast30Days = sales;
+    }
+
+    private async Task LoadSalesLast12Month()
+    {
+        var sales = await _dashboardService.GetSalesLast12Month();
+
+        SalesLast12Month = sales;
+    }
+
+    private async Task PageIndexChanged(int pageIndex)
+    {
+        PageIndex = pageIndex + 1;
+
+        if (IsFiltered)
+        {
+            await GetWithSearch(Search);
+        }
+        else
+        {
+            await LoadData(PageIndex, PageSize);
+        }
+    }
+    private async Task PageSizeChanged(int pageSize)
+    {
+        PageSize = pageSize;
+
+        if (IsFiltered)
+        {
+            await GetWithSearch(Search);
+        }
+        else
+        {
+            await LoadData(PageIndex, PageSize);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoading = true;
+
+        await LoadSalesLast12Month();
+        await LoadData(PageIndex);
+        await LoadSalesLast30Days();
+
+        await Task.Delay(1000);
+        IsLoading = false;
+    }
+
+    string FormatAsMonth(object value)
+    {
+        if (value != null)
+        {
+            return Convert.ToDateTime(value).ToString("MMM");
+        }
+
+        return string.Empty;
+    }
+    string FormatAsUSD(object value)
+    {
+        return ((double)value).ToString("C0", System.Globalization.CultureInfo.CreateSpecificCulture("en-US"));
+    }
 }

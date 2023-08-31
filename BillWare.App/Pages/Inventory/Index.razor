@@ -35,7 +35,7 @@
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="Inventory"
                               Property="Model"
-                              Title="Modelo">
+                              Title="Marca">
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="Inventory"
                               Title="Precio">
@@ -215,13 +215,13 @@
         }
     }
 
-    private async Task OpenEditDialogForm(string title, Inventory costumer)
+    private async Task OpenEditDialogForm(string title, Inventory inventory)
     {
         var action = await DialogService.OpenAsync<InventoryForm>(title,
         new Dictionary<string, object>
                 {
             { "FormMode", Common.FormMode.EDIT },
-            { "InventoryParameter", costumer }
+            { "InventoryParameter", inventory }
                 },
         new DialogOptions
             {

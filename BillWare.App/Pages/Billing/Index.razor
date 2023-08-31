@@ -13,6 +13,7 @@
 
 <RadzenButton Text="CREAR FACTURA" class="mb-3 mt-3" Style="background-color:#003053; color: #FFF" Click="@(async() => await OpenAddDialogForm())" />
 <RadzenTextBox Placeholder="Presiona ENTER al buscar" Change="@(async(e) => await GetWithSearch(e))" />
+
 <RadzenDataGrid Data="Billings"
                 TItem="BillingModel"
                 Responsive="true"

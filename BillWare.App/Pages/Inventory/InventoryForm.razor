@@ -1,4 +1,5 @@
-﻿@inject IInventoryService _inventoryService
+﻿@inject IInventoryService _inventoryService;
+@inject ICategoryService _categoryService;
 @inject DialogService DialogService
 
 <RadzenTemplateForm TItem="Inventory"
@@ -8,33 +9,42 @@
         <div class="col-md-6">
             <div class="form-group">
                 <RadzenLabel Text="Nombre"></RadzenLabel>
-                <RadzenTextBox Name="Name" @bind-Value="@Inventory.Name" class="form-control" />
+                <RadzenTextBox Name="Name" @bind-Value="@Inventory.Name" class="form-control" Placeholder="Introduce el nombre"/>
                 <RadzenRequiredValidator Component="Name" Text="Introducir nombre" Popup="true" Style="position: absolute" />
             </div>
             <div class="form-group">
                 <RadzenLabel Text="Descripción" class="mt-3"></RadzenLabel>
-                <RadzenTextBox @bind-Value="@Inventory.Description" class="form-control" />
+                <RadzenTextBox @bind-Value="@Inventory.Description" class="form-control" Placeholder="Introduce la descripción" />
             </div>
             <div class="form-group">
-                <RadzenLabel Text="Modelo" class="mt-3"></RadzenLabel>
-                <RadzenTextBox Name="Model" @bind-Value="@Inventory.Model" class="form-control" />
-                <RadzenRequiredValidator Component="Model" Text="Introducir modelo" Popup="true" Style="position: absolute" />
+                <RadzenLabel Text="Marca" class="mt-3"></RadzenLabel>
+                <RadzenTextBox Name="Model" @bind-Value="@Inventory.Model" class="form-control" Placeholder="Introduce la marca" />
+                <RadzenRequiredValidator Component="Model" Text="Introducir marca" Popup="true" Style="position: absolute" />
             </div>
         </div>
         <div class="col-md-6">
             <div class="form-group">
                 <RadzenLabel Text="Precio"></RadzenLabel>
-                <RadzenNumeric Name="Price" @bind-Value="@Inventory.Price" class="form-control" />
+                <RadzenNumeric Name="Price" @bind-Value="@Inventory.Price" class="form-control" Placeholder="Introduce el precio" />
                 <RadzenRequiredValidator Component="Price" Text="Introducir precio" Popup="true" Style="position: absolute" />
             </div>
             <div class="form-group">
                 <RadzenLabel Text="Categoría" class="mt-3"></RadzenLabel>
-                <RadzenTextBox Name="Category" @bind-Value="@Inventory.Category" class="form-control" />
+
+                <RadzenDropDown Name="Category" 
+                                Data="Categories" 
+                                TextProperty="Name" 
+                                ValueProperty="Id" 
+                                @bind-Value="@Inventory.CategoryId" 
+                                Placeholder="Selecciona la categoría"
+                                SearchTextChanged="@(async(e) => await LoadCategoriesWithSearch(e))"
+                                class="form-control" />
+
                 <RadzenRequiredValidator Component="Category" Text="Selecciona una categoría" Popup="true" Style="position: absolute" />
             </div>
             <div class="form-group">
                 <RadzenLabel Text="Cantidad" class="mt-3"></RadzenLabel>
-                <RadzenNumeric Name="Quantity" @bind-Value="@Inventory.Quantity" class="form-control" />
+                <RadzenNumeric Name="Quantity" @bind-Value="@Inventory.Quantity" class="form-control" Placeholder="Introduce la cantidad" />
                 <RadzenRequiredValidator Component="Quantity" Text="Introducir nombre" Popup="true" Style="position: absolute" />
             </div>
         </div>
@@ -50,6 +60,7 @@
     [Parameter] public Inventory InventoryParameter { get; set; } = new Inventory();
 
     private Inventory Inventory = new Inventory();
+    private List<CategoryModel> Categories { get; set; } = new List<CategoryModel>();
     private string ButtonTitle => FormMode == Common.FormMode.ADD ? "Agregar" : "Editar";
 
     private async Task OnSubmit()
@@ -89,8 +100,28 @@
         DialogService.Close(closeReturn);
     }
 
-    protected override void OnInitialized()
+    private async Task LoadCategories()
     {
+        var data = await _categoryService.GetCategoriesPaged(1, 100);
+
+        Categories = data.Items;
+
+        StateHasChanged();
+    }
+
+    private async Task LoadCategoriesWithSearch(string searchText)
+    {
+        var result = await _categoryService.GetCategoriesPagedWithSearch(1, 100, searchText);
+
+        Categories = result.Items;
+
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+
         if (FormMode == Common.FormMode.EDIT)
         {
             Inventory = InventoryParameter;
