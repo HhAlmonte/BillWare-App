@@ -1,53 +1,61 @@
-﻿@page "/category/index"
+﻿@page "/service/index"
 
-@inject ICategoryService _categoryService;
+@inject IBillingServiceService _billingService;
 @inject DialogService DialogService;
 
-<h3>Categoría</h3>
+<h3>Servicios</h3>
 
 <hr />
 
-<RadzenButton Text="AGREGAR" class="mb-3 mt-3" Style="background-color:#003053; color: #FFF" Click="@(async()=> await OpenAddDialogForm("Agregar categoría"))" />
+<RadzenButton Text="AGREGAR" class="mb-3 mt-3" Style="background-color:#003053; color: #FFF" Click="@(async()=> await OpenAddDialogForm("Registar servicio"))" />
 <RadzenTextBox Placeholder="Presiona ENTER al buscar" Change="@(async(e) => await GetWithSearch(e))" />
 
-<RadzenDataGrid Data="Categories"
-                TItem="CategoryModel"
+<RadzenDataGrid Data="BillingsServices"
+                TItem="BillingServiceModel"
                 Responsive="true"
                 AllowColumnResize="true">
     <EmptyTemplate>
         <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">No records to display.</p>
     </EmptyTemplate>
     <Columns>
-        <RadzenDataGridColumn TItem="CategoryModel"
+        <RadzenDataGridColumn TItem="BillingServiceModel"
                               Title="Identificador">
             <Template Context="data">
                 @data.Id.ToString("D3")
             </Template>
         </RadzenDataGridColumn>
 
-        <RadzenDataGridColumn TItem="CategoryModel"
+        <RadzenDataGridColumn TItem="BillingServiceModel"
                               Title="Nombre"
                               Property="Name">
         </RadzenDataGridColumn>
 
-        <RadzenDataGridColumn TItem="CategoryModel"
+        <RadzenDataGridColumn TItem="BillingServiceModel"
                               Property="Description"
                               Title="Descripción">
         </RadzenDataGridColumn>
 
-        <RadzenDataGridColumn TItem="CategoryModel"
+        <RadzenDataGridColumn TItem="BillingServiceModel"
+                              Property="Price"
+                              Title="Precio">
+            <Template Context="price">
+                @price.Price.ToString("C")
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="BillingServiceModel"
                               Title="Fecha de Creación"
                               Width="220px">
             <Template Context="date">
                 @date.CreatedAt.ToString("dd/MM/yyyy hh:mm")
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="CategoryModel"
+        <RadzenDataGridColumn TItem="BillingServiceModel"
                               Title="Acciones"
                               Context="data"
                               TextAlign="TextAlign.Center">
             <Template>
-                <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Click="@(async() => await OpenEditDialogForm("Editar categoría", data))" />
+                <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Click="@(async() => await OpenEditDialogForm("Editar servicio", data))" />
                 <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await Delete(data.Id))" />
             </Template>
         </RadzenDataGridColumn>
@@ -72,8 +80,8 @@
 }
 
 @code {
-    private BaseResponseModel<CategoryModel> BaseResponse { get; set; } = new BaseResponseModel<CategoryModel>();
-    private List<CategoryModel> Categories { get; set; } = new List<CategoryModel>();
+    private BaseResponseModel<BillingServiceModel> BaseResponse { get; set; } = new BaseResponseModel<BillingServiceModel>();
+    private List<BillingServiceModel> BillingsServices { get; set; } = new List<BillingServiceModel>();
     private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
 
     private string pagingSummaryFormat = "Desplegando página {0} de {1} total {2} registros";
@@ -86,11 +94,11 @@
 
     private async Task OpenAddDialogForm(string title)
     {
-        var action = await DialogService.OpenAsync<CategoryForm>(title,
+        var action = await DialogService.OpenAsync<BillingServiceForm>(title,
         new Dictionary<string, object>
-            {
+                {
             { "FormMode", Common.FormMode.ADD }
-            },
+                },
         new DialogOptions
             {
                 Width = "auto"
@@ -108,14 +116,14 @@
         }
     }
 
-    private async Task OpenEditDialogForm(string title, CategoryModel category)
+    private async Task OpenEditDialogForm(string title, BillingServiceModel billingService)
     {
-        var action = await DialogService.OpenAsync<CategoryForm>(title,
+        var action = await DialogService.OpenAsync<BillingServiceForm>(title,
         new Dictionary<string, object>
-                    {
+                        {
                     { "FormMode", Common.FormMode.EDIT },
-                    { "CategoryParameter", category }
-                    },
+                    { "BillingServiceParameter", billingService }
+                        },
         new DialogOptions
             {
                 Width = "auto",
@@ -136,8 +144,8 @@
     private async Task LoadData(int pageIndex, int pageSize = 5)
     {
         Search = string.Empty;
-        BaseResponse = await _categoryService.GetCategoriesPaged(pageIndex, pageSize);
-        Categories = BaseResponse.Items;
+        BaseResponse = await _billingService.GetBillingsServices(pageIndex, pageSize);
+        BillingsServices = BaseResponse.Items;
     }
 
     private async Task GetWithSearch(string search)
@@ -153,8 +161,8 @@
         }
         else
         {
-            BaseResponse = await _categoryService.GetCategoriesPagedWithSearch(PageIndex, PageSize, search);
-            Categories = BaseResponse.Items;
+            BaseResponse = await _billingService.GetBillingsServicesWithSearch(search, PageIndex, PageSize);
+            BillingsServices = BaseResponse.Items;
         }
     }
 
@@ -192,7 +200,7 @@
 
         if (isConfirmed)
         {
-            var action = await _categoryService.DeleteCategory(id);
+            var action = await _billingService.DeleteBillingService(id);
 
             if (!action.IsSuccessStatusCode)
             {
@@ -200,7 +208,7 @@
             }
             else
             {
-                if (Categories.Count == 1 && PageIndex != 1)
+                if (BillingsServices.Count == 1 && PageIndex != 1)
                 {
                     PageIndex -= 1;
                     await LoadData(PageIndex, PageSize);

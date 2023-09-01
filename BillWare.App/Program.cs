@@ -15,6 +15,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(Configur
 
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IBillingService, BillingService>();
+builder.Services.AddScoped<IBillingServiceService, BillingServiceService>();
 builder.Services.AddScoped<IBillingItemService, BillingItemService>();
 builder.Services.AddScoped<ICostumerService, CostumerService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();

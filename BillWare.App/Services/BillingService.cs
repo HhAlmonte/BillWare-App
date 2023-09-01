@@ -57,6 +57,20 @@ namespace BillWare.App.Services
             return response;
         }
 
+        public async Task<BaseResponseModel<BillingModel>> GetBillingWithParams(BillingsParamsModel billingsParams)
+        {
+            var url = $"Billing/GetBillingsPagedWithParams?pageIndex={billingsParams.PageIndex}&pageSize={billingsParams.PageSize}";
+
+            if (billingsParams.InitialDate != null)
+            {
+                url += $"&initialDate={billingsParams.InitialDate:MM/dd/yyyy}&finalDate={billingsParams.FinalDate:MM/dd/yyyy}";
+            }
+
+            var response = await _httpClient.GetFromJsonAsync<BaseResponseModel<BillingModel>>(url);
+
+            return response;
+        }
+
         public async Task<BaseResponseModel<BillingModel>> GetBillingWithSearch(string search, int pageIndex, int pageSize)
         {
             var response = await _httpClient

@@ -9,6 +9,7 @@ namespace BillWare.App.Intefaces
         Task<HttpResponseMessage> UpdateBilling(BillingModel model);
         Task<HttpResponseMessage> DeleteBilling(int id);
         Task<BaseResponseModel<BillingModel>> GetBillingWithSearch(string search, int pageIndex, int pageSize);
+        Task<BaseResponseModel<BillingModel>> GetBillingWithParams(BillingsParamsModel billingsParams);
         Task<BaseResponseModel<BillingModel>> GetBilling(int pageIndex, int pageSize);
         Task<int> GetLastInvoiceNumber();
     }

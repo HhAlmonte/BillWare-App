@@ -36,7 +36,18 @@
     </div>
 </div>
 
-<h5>Historial</h5>
+<h5 class="mb-2">Historial</h5>
+
+<div style="display: flex; align-items: center;" class="mb-2">
+    <span style="margin-right: 1rem;">Buscar:</span>
+    <RadzenTextBox Placeholder="Presione ENTER al buscar" Change="@(async(e) => await GetWithSearch(e))" />
+    <span style="margin-right: 1rem; margin-left: 1rem">Filtrar por fechas:</span>
+    <RadzenDatePicker @bind-Value="BillingsParamsModel.InitialDate"/>
+    <span style="margin: 0 0.5rem;">hasta</span>
+    <RadzenDatePicker @bind-Value="BillingsParamsModel.FinalDate"/>
+
+    <RadzenButton style="margin-left: 0.5rem" Icon="search" ButtonStyle="ButtonStyle.Success" Click="@(async() => await LoadWithParams())" />
+</div>
 
 <RadzenDataGrid Data="Billings"
                 TItem="BillingModel"
@@ -135,6 +146,26 @@
              PagingSummaryFormat="@pagingSummaryFormat">
 </RadzenPager>
 
+<div class="row mb-5">
+    <div class="col-8"></div>
+    <div class="col-4">
+        <RadzenDataGrid Data="BillingDataGridDetails" @ref="gridDetails" AllowColumnResize Responsive TItem="BillingDataGridDetails">
+            <Columns>
+                <RadzenDataGridColumn TItem="BillingDataGridDetails"
+                                      Property="Currency"
+                                      Title="Moneda"/>
+
+                <RadzenDataGridColumn TItem="BillingDataGridDetails"
+                                      Title="Monto total">
+                        <Template Context="amount">
+                            @amount.Amount.ToString("C")
+                        </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </div>
+</div>
+
 @if (IsLoading)
 {
     <LoadingOverlay />
@@ -144,8 +175,10 @@
 @code {
     private BaseResponseModel<BillingModel> BaseResponse { get; set; } = new BaseResponseModel<BillingModel>();
     private List<BillingModel> Billings { get; set; } = new List<BillingModel>();
+    private BillingsParamsModel BillingsParamsModel { get; set; } = new BillingsParamsModel();
     private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
     RadzenDataGrid<BillingItemModel> grid;
+    RadzenDataGrid<BillingDataGridDetails> gridDetails;
     private bool IsLoading { get; set; } = false;
     private int PageSize { get; set; } = 5;
     private int PageIndex { get; set; } = 1;
@@ -154,28 +187,47 @@
     private string pagingSummaryFormat = "Desplegando página {0} de {1} total {2} registros";
     private List<StatisticsModel> SalesLast30Days { get; set; } = new List<StatisticsModel>();
     private List<StatisticsModel> SalesLast12Month { get; set; } = new List<StatisticsModel>();
+    private List<BillingDataGridDetails> BillingDataGridDetails { get; set; } = new List<BillingDataGridDetails>();
+    private bool IsDateFiltered { get; set; } = false;
 
     private async Task LoadData(int pageIndex, int pageSize = 5)
     {
         BaseResponse = await _billingService.GetBilling(pageIndex, pageSize);
         Billings = BaseResponse.Items;
     }
+
     private async Task GetWithSearch(string search)
     {
         IsFiltered = true;
         Search = search;
+        BillingDataGridDetails.Clear();
 
         if (Search == "")
         {
             IsFiltered = false;
             await LoadData(PageIndex, PageSize);
-            return;
+            await LoadDataGridDetails();
+            StateHasChanged();
         }
         else
         {
             BaseResponse = await _billingService.GetBillingWithSearch(Search, PageIndex, PageSize);
             Billings = BaseResponse.Items;
+            await LoadDataGridDetails();
+            StateHasChanged();
         }
+    }
+
+    private async Task LoadWithParams(int pageIndex = 1, int pageSize = 10)
+    {
+        BillingsParamsModel.PageIndex = pageIndex;
+        BillingsParamsModel.PageSize = pageSize;
+
+        BaseResponse = await _billingService.GetBillingWithParams(BillingsParamsModel);
+        Billings = BaseResponse.Items;
+        BillingDataGridDetails.Clear();
+        await LoadDataGridDetails();
+        IsDateFiltered = true;
     }
 
     private async Task LoadSalesLast30Days()
@@ -196,13 +248,20 @@
     {
         PageIndex = pageIndex + 1;
 
-        if (IsFiltered)
+        if (IsDateFiltered)
         {
-            await GetWithSearch(Search);
+            await LoadWithParams(PageIndex, PageSize);
         }
         else
         {
-            await LoadData(PageIndex, PageSize);
+            if (IsFiltered)
+            {
+                await GetWithSearch(Search);
+            }
+            else
+            {
+                await LoadData(PageIndex, PageSize);
+            }
         }
     }
     private async Task PageSizeChanged(int pageSize)
@@ -219,19 +278,33 @@
         }
     }
 
+    private async Task LoadDataGridDetails()
+    {
+        var totalAmount = Billings.Sum(x => x.TotalPriceWithTax);
+
+        BillingDataGridDetails.Add(new BillingDataGridDetails
+        {
+            Amount = totalAmount,
+            Currency = "DOP"
+        });
+
+        await gridDetails.Reload();
+    }
+
     protected override async Task OnInitializedAsync()
     {
         IsLoading = true;
 
-        await LoadSalesLast12Month();
         await LoadData(PageIndex);
         await LoadSalesLast30Days();
+        await LoadSalesLast12Month();
+        await LoadDataGridDetails();
 
         await Task.Delay(1000);
         IsLoading = false;
     }
 
-    string FormatAsMonth(object value)
+    private string FormatAsMonth(object value)
     {
         if (value != null)
         {
@@ -240,7 +313,7 @@
 
         return string.Empty;
     }
-    string FormatAsUSD(object value)
+    private string FormatAsUSD(object value)
     {
         return ((double)value).ToString("C0", System.Globalization.CultureInfo.CreateSpecificCulture("en-US"));
     }

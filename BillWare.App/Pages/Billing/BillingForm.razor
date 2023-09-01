@@ -2,6 +2,7 @@
 @inject IBillingItemService _billingItemService;
 @inject ICostumerService _costumerService;
 @inject IInventoryService _inventoryService;
+@inject IBillingServiceService _billingServiceService;
 @inject DialogService DialogService;
 
 <RadzenTemplateForm Data="Billing" TItem="BillingModel" Submit="@(async() => await OnSubmit())">
@@ -62,6 +63,18 @@
                         Placeholder="Seleccione productos"
                         Style="width:250px"
                         SearchTextChanged="@(async(e) => await GetInventoryBySearch(e))" />
+
+        <RadzenDropDown class="form-control"
+                        TValue="List<BillingServiceModel>"
+                        TextProperty="Name"
+                        Data="BillingsServices"
+                        ValueChanged="@((e) => OnBillingServiceSelected(e))"
+                        Multiple="true"
+                        FilterOperator="StringFilterOperator.StartsWith"
+                        AllowFiltering="true"
+                        Placeholder="Seleccione servicios"
+                        Style="width:250px; margin-left:-11px;"
+                        SearchTextChanged="@(async(e) => await GetBillingsServicesWithSearch(e))" />
     </RadzenStack>
     <div class="row mb-2">
         <RadzenDataGrid TItem="BillingItemModel"
@@ -171,7 +184,11 @@
 
     private List<Inventory> Inventories { get; set; } = new List<Inventory>();
 
+    private List<BillingServiceModel> BillingsServices { get; set; } = new List<BillingServiceModel>();
+
     private List<Inventory> InventoriesSelected { get; set; } = new List<Inventory>();
+
+    private List<BillingServiceModel> BillingsServicesSelected { get; set; } = new List<BillingServiceModel>();
 
     private Common.InvoiceNumberGenerator InvoiceNumberGenerator = new Common.InvoiceNumberGenerator("FACT");
 
@@ -212,6 +229,15 @@
         var data = await _inventoryService.GetInventories(1, 50);
 
         Inventories = data.Items;
+
+        StateHasChanged();
+    }
+
+    private async Task LoadBillingsService()
+    {
+        var data = await _billingServiceService.GetBillingsServices(1, 50);
+
+        BillingsServices = data.Items;
 
         StateHasChanged();
     }
@@ -319,6 +345,13 @@
         Inventories = result.Items;
     }
 
+    private async Task GetBillingsServicesWithSearch(string searchText)
+    {
+        var result = await _billingServiceService.GetBillingsServicesWithSearch(searchText, 1, 100);
+
+        BillingsServices = result.Items;
+    }
+
     private void OnInventorySelected(object inventorySelected)
     {
         InventoriesSelected = (List<Inventory>)inventorySelected;
@@ -334,7 +367,36 @@
                 Description = i.Name,
                 Quantity = quantity,
                 Price = i.Price,
-                
+
+                Amount = amount,
+
+                Tax = CalcularITBIS(amount)
+            });
+        }
+
+        CalculateNetoAndTotalPrice();
+
+        StateHasChanged();
+
+        grid.Reload();
+    }
+
+    private void OnBillingServiceSelected(object billingServiceSelected)
+    {
+        BillingsServicesSelected = (List<BillingServiceModel>)billingServiceSelected;
+
+        foreach (var i in BillingsServicesSelected)
+        {
+            var quantity = 1;
+            var amount = (int)i.Price * quantity;
+
+            BillingItems.Add(new BillingItemModel
+            {
+                Code = i.Id,
+                Description = i.Name,
+                Quantity = quantity,
+                Price = i.Price,
+
                 Amount = amount,
 
                 Tax = CalcularITBIS(amount)
@@ -351,6 +413,8 @@
     protected override async void OnInitialized()
     {
         await LoadInventories();
+
+        await LoadBillingsService();
 
         if(FormMode == Common.FormMode.EDIT)
         {
