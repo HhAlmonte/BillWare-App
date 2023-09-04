@@ -1,0 +1,43 @@
+﻿@inject IAuthService _authService;
+@inject NavigationManager _navigationManager;
+@inject LocalStorageService _localStorageService;
+
+@page "/account/signin"
+
+<div class="login">
+    <h2 class="login-header">Iniciar Sesión</h2>
+
+    <form class="login-container" @onsubmit="HandleLogin">
+        <p><input type="email" placeholder="Email" @bind="SignInModel.Email"></p>
+        <p><input type="password" placeholder="Password" @bind="SignInModel.Password"></p>
+        <p><input type="submit" value="Aceptar"></p>
+    </form>
+</div>
+
+@code
+{
+    private LoginModel SignInModel = new LoginModel();
+
+    private async Task HandleLogin()
+    {
+        var result = await _authService.LoginAsync(SignInModel);
+
+        if (result.Token != null)
+        {
+            await _localStorageService.SetItem("access_token", result.Token);
+            _navigationManager.NavigateTo("/");
+        }
+        else
+        {
+            await SweetAlertServices.ShowErrorAlert("Error", "Usuario o contraseña incorrectos");
+        }
+    }
+}
+<style>
+
+    body {
+        font-family: 'Quicksand', sans-serif;
+        color: #E0E0E0;
+        background: #003053;
+    }
+</style>

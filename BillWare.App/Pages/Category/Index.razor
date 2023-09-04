@@ -88,13 +88,13 @@
     {
         var action = await DialogService.OpenAsync<CategoryForm>(title,
         new Dictionary<string, object>
-            {
+        {
             { "FormMode", Common.FormMode.ADD }
-            },
+        },
         new DialogOptions
-            {
+        {
                 Width = "auto"
-            });
+        });
 
         var isLoad = action == null ? false : true;
 

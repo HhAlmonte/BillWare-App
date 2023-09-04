@@ -1,0 +1,82 @@
+﻿@inject IAuthService _authService;
+@inject DialogService DialogService
+
+<RadzenTemplateForm TItem="RegistrationModel"
+                    Data="Registration"
+                    Submit="OnSubmit">
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Nombre completo"></RadzenLabel>
+                <RadzenTextBox Name="Name" @bind-Value="@Registration.FirstName" class="form-control" />
+                <RadzenRequiredValidator Component="Name" Text="Introducir nombre" Popup="true" Style="position: absolute" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Apellido"></RadzenLabel>
+                <RadzenTextBox Name="LastName" @bind-Value="@Registration.LastName" class="form-control" />
+                <RadzenRequiredValidator Component="LastName" Text="Introducir apellido" Popup="true" Style="position: absolute" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Usuario"></RadzenLabel>
+                <RadzenTextBox Name="UserName" @bind-Value="@Registration.UserName" class="form-control" />
+                <RadzenRequiredValidator Component="UserName" Text="Introducir nombre de usuario" Popup="true" Style="position: absolute" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Correo Electronico"></RadzenLabel>
+                <RadzenTextBox Name="Email" @bind-Value="@Registration.Email" class="form-control" />
+                <RadzenRequiredValidator Component="Email" Text="Introducir email" Popup="true" Style="position: absolute" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Contraseña"></RadzenLabel>
+                <RadzenTextBox Name="Password" @bind-Value="@Registration.Password" class="form-control" />
+                <RadzenRequiredValidator Component="Password" Text="Introducir contraseña" Popup="true" Style="position: absolute" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Cédula"></RadzenLabel>
+                <RadzenTextBox Name="NmberId" @bind-Value="@Registration.NumberId" class="form-control" />
+                <RadzenRequiredValidator Component="NmberId" Text="Introducir cedula" Popup="true" Style="position: absolute" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Dirección"></RadzenLabel>
+                <RadzenTextBox Name="Address" @bind-Value="@Registration.Address" class="form-control" />
+                <RadzenRequiredValidator Component="Address" Text="Introducir dirección" Popup="true" Style="position: absolute" />
+            </div>
+        </div>
+    </div>
+    <div class="form-group text-center mt-3">
+        <RadzenButton Text="Agregar" ButtonType="ButtonType.Submit" Style="background-color:#003053; color: #FFF" />
+    </div>
+</RadzenTemplateForm>
+
+@code {
+    public RegistrationModel Registration { get; set; } = new RegistrationModel();
+
+    private async Task OnSubmit()
+    {
+        var result = await _authService.RegisterAsync(Registration);
+
+        if (!result.IsSuccessStatusCode)
+        {
+            await SweetAlertServices.ShowErrorAlert("Ocurrió un error", await result.Content.ReadAsStringAsync());
+        }
+        else
+        {
+            var closeReturn = result != null ? true : false;
+
+            DialogService.Close(closeReturn);
+        }
+    }
+}

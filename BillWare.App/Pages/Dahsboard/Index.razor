@@ -1,8 +1,7 @@
-﻿@page "/"
-
+﻿
+@page "/"
 @inject IBillingService _billingService;
 @inject IDashboardService _dashboardService;
-
 <h3>Resumen</h3>
 
 <hr />
@@ -11,7 +10,7 @@
     <div class="col-6">
         <h5>Ventas de los últimos 30 días</h5>
         <RadzenChart class="mb-3">
-            <RadzenLineSeries Smooth="true" Data="SalesLast30Days" CategoryProperty="SaleDate" ValueProperty="Amount" RenderingOrder="1">
+            <RadzenLineSeries Smooth="true" Data="SalesLast30Days" CategoryProperty="SaleDate" Title="Ganancias" ValueProperty="Amount" RenderingOrder="1">
                 <RadzenMarkers MarkerType="MarkerType.Circle" />
                 <RadzenSeriesDataLabels Visible="true" />
             </RadzenLineSeries>
@@ -24,7 +23,7 @@
     <div class="col-6">
         <h5>Ventas de los últimos 12 meses</h5>
         <RadzenChart class="mb-3">
-            <RadzenLineSeries Smooth="true" Data="SalesLast12Month" CategoryProperty="SaleDate" ValueProperty="Amount" RenderingOrder="1">
+            <RadzenLineSeries Smooth="true" Data="SalesLast12Month" CategoryProperty="SaleDate" Title="Ganancias" ValueProperty="Amount" RenderingOrder="1">
                 <RadzenMarkers MarkerType="MarkerType.Circle" />
                 <RadzenSeriesDataLabels Visible="true" />
             </RadzenLineSeries>

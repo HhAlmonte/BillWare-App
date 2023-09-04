@@ -1,0 +1,134 @@
+﻿@page "/user/index"
+
+@inject IUserService _userService;
+@inject DialogService DialogService;
+
+<h3>Usuarios</h3>
+
+<hr />
+
+<RadzenButton Text="AGREGAR" class="mb-3 mt-3" Style="background-color:#003053; color: #FFF" Click="@(async()=> await OpenAddDialogForm("Registrar usuario"))" />
+
+<RadzenDataGrid Data="Users"
+                TItem="UserModel"
+                Responsive
+                AllowColumnResize>
+    <EmptyTemplate>
+        <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">No records to display.</p>
+    </EmptyTemplate>
+    <Columns>
+        <RadzenDataGridColumn TItem="UserModel"
+                              Title="Identificador"
+                              Property="Id">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="UserModel"
+                              Title="Nombres"
+                              Property="FirstName">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="UserModel"
+                              Property="LastName"
+                              Title="Apellidos">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="UserModel"
+                              Property="Email"
+                              Title="Correo">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="UserModel"
+                              Property="NumberId"
+                              Title="Cédula">
+        </RadzenDataGridColumn>
+
+
+        <RadzenDataGridColumn TItem="UserModel"
+                              Title="Fecha de Creación"
+                              Width="220px">
+            <Template Context="date">
+                @date.CreatedAt.ToString("dd/MM/yyyy hh:mm")
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+<RadzenPager PageSize="BaseResponse.PageSize"
+             Count="BaseResponse.TotalItems"
+             PageChanged="@(async(e) => await PageIndexChanged(e.PageIndex))"
+             PageSizeOptions="PageSizeOptions"
+             PageSizeText="registros por página"
+             HorizontalAlign="HorizontalAlign.Left"
+             PageSizeChanged="@(async(e) => await PageSizeChanged(e))"
+             ShowPagingSummary="true"
+             PagingSummaryFormat="@pagingSummaryFormat">
+</RadzenPager>
+
+@if (IsLoading)
+{
+    <LoadingOverlay />
+}
+
+@code {
+    private BaseResponseModel<UserModel> BaseResponse = new BaseResponseModel<UserModel>();
+    private List<UserModel> Users = new List<UserModel>();
+
+    private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
+
+    private string pagingSummaryFormat = "Desplegando página {0} de {1} total {2} registros";
+    private int PageSize { get; set; } = 5;
+    private int PageIndex { get; set; } = 1;
+
+    private bool IsLoading { get; set; } = false;
+
+    private async Task OpenAddDialogForm(string title)
+    {
+        var action = await DialogService.OpenAsync<UserForm>(title,
+        options: new DialogOptions
+        {
+            Width = "700px",
+            Draggable = true,
+        });
+
+        var isLoad = action == null ? false : true;
+
+        if (isLoad)
+        {
+            IsLoading = true;
+            await LoadData(PageIndex, PageSize);
+
+            await Task.Delay(1000);
+            IsLoading = false;
+        }
+    }
+
+    private async Task LoadData(int pageIndex, int pageSize = 5)
+    {
+        BaseResponse = await _userService.GetUsersPaged(pageIndex, pageSize);
+        Users = BaseResponse.Items;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoading = true;
+        await LoadData(PageIndex);
+
+        await Task.Delay(1000);
+        IsLoading = false;
+    }
+
+
+    private async Task PageIndexChanged(int pageIndex)
+    {
+        PageIndex = pageIndex + 1;
+
+        await LoadData(PageIndex, PageSize);
+    }
+
+    private async Task PageSizeChanged(int pageSize)
+    {
+        PageSize = pageSize;
+
+        await LoadData(PageIndex, PageSize);
+    }
+}
