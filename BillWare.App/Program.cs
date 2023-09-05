@@ -6,22 +6,19 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.JSInterop;
 using Radzen;
-using System.Net.Http.Headers;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped<LocalStorageService>();
 builder.Services.AddScoped<TokenService>();
-builder.Services.AddScoped<TokenInterceptor>();
+builder.Services.BuildServiceProvider().GetRequiredService<IJSRuntime>();
 
-var jsRuntime = builder.Services.BuildServiceProvider().GetRequiredService<IJSRuntime>();
-var localStorageService = new LocalStorageService(jsRuntime);
-var tokenService = new TokenService(localStorageService);
-
-var httpClient = new HttpClient(new TokenInterceptor(tokenService)) { 
-    BaseAddress = new Uri(Configuration.BASE_API_URL) 
+var httpClient = new HttpClient()
+{
+    BaseAddress = new Uri(Configuration.BASE_API_URL)
 };
 
 builder.Services.AddSingleton(httpClient);

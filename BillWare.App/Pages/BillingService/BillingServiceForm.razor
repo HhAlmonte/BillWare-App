@@ -53,27 +53,42 @@
 
     private async Task Add()
     {
-        var action = await _billingService.CreateBillingService(BillingService);
+        try
+        {
+            var response = await _billingService.CreateBillingService(BillingService);
 
-        if (!action.IsSuccessStatusCode)
-        {
-            await SweetAlertServices.ShowErrorAlert("Ocurrió un error", await action.Content.ReadAsStringAsync());
-        }
-        else
-        {
-            var closeReturn = action != null ? true : false;
+            var closeReturn = response != null ? true : false;
 
             DialogService.Close(closeReturn);
+        }
+        catch (HttpRequestException ex)
+        {
+            await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
+        }
+        catch (Exception ex)
+        {
+            await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
         }
     }
 
     private async Task Edit()
     {
-        var action = await _billingService.EditBillingService(BillingService);
+        try
+        {
+            var response = await _billingService.EditBillingService(BillingService);
 
-        var closeReturn = action != null ? true : false;
+            var closeReturn = response != null ? true : false;
 
-        DialogService.Close(closeReturn);
+            DialogService.Close(closeReturn);
+        }
+        catch (HttpRequestException ex)
+        {
+            await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
+        }
+        catch (Exception ex)
+        {
+            await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
+        }
     }
 
     protected override void OnInitialized()

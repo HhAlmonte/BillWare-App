@@ -23,7 +23,7 @@ namespace BillWare.App.Services
 
                 return loginResponse;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }

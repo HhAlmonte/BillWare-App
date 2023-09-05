@@ -19,5 +19,17 @@ namespace BillWare.App.Services
 
             return users;
         }
+
+        public async Task<UserModel> UpdateUser(UserModel user)
+        {
+            var response = await _httpClient.PutAsJsonAsync("User/UpdateUser", user);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<UserModel>();
+            }
+
+            return null;
+        }
     }
 }

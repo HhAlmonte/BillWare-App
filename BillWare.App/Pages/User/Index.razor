@@ -42,12 +42,24 @@
                               Title="Cédula">
         </RadzenDataGridColumn>
 
+        <RadzenDataGridColumn TItem="UserModel"
+                              Property="Role"
+                              Title="Rol">
+        </RadzenDataGridColumn>
 
         <RadzenDataGridColumn TItem="UserModel"
                               Title="Fecha de Creación"
                               Width="220px">
             <Template Context="date">
                 @date.CreatedAt.ToString("dd/MM/yyyy hh:mm")
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="UserModel"
+                              Title="Acciones"
+                              TextAlign="TextAlign.Center">
+            <Template Context="user">
+                <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Click="@(async()=> await OpenEditDialogForm(user))" />
             </Template>
         </RadzenDataGridColumn>
     </Columns>
@@ -101,6 +113,29 @@
             IsLoading = false;
         }
     }
+    private async Task OpenEditDialogForm(UserModel user)
+    {
+        var action = await DialogService.OpenAsync<UserForm>("Editar usuario",
+        parameters: new Dictionary<string, object>() { { "UserParameter", user }, { "FormMode", Common.FormMode.EDIT } },
+        options: new DialogOptions
+        {
+            Width = "700px",
+            Draggable = true,
+        });
+
+        var isLoad = action == null ? false : true;
+
+        if (isLoad)
+        {
+            IsLoading = true;
+            await LoadData(PageIndex, PageSize);
+
+            await Task.Delay(1000);
+            IsLoading = false;
+        }
+    
+    }
+
 
     private async Task LoadData(int pageIndex, int pageSize = 5)
     {

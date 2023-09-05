@@ -1,4 +1,5 @@
 ﻿@inject IAuthService _authService;
+@inject IUserService _userService;
 @inject DialogService DialogService
 
 <RadzenTemplateForm TItem="RegistrationModel"
@@ -34,13 +35,16 @@
                 <RadzenRequiredValidator Component="Email" Text="Introducir email" Popup="true" Style="position: absolute" />
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="form-group">
-                <RadzenLabel Text="Contraseña"></RadzenLabel>
-                <RadzenTextBox Name="Password" @bind-Value="@Registration.Password" class="form-control" />
-                <RadzenRequiredValidator Component="Password" Text="Introducir contraseña" Popup="true" Style="position: absolute" />
+        @if (ShowPasswordInput)
+        {
+            <div class="col-md-6">
+                <div class="form-group">
+                    <RadzenLabel Text="Contraseña"></RadzenLabel>
+                    <RadzenTextBox Name="Password" @bind-Value="@Registration.Password" class="form-control" />
+                    <RadzenRequiredValidator Component="Password" Text="Introducir contraseña" Popup="true" Style="position: absolute" />
+                </div>
             </div>
-        </div>
+        }
         <div class="col-md-6">
             <div class="form-group">
                 <RadzenLabel Text="Cédula"></RadzenLabel>
@@ -55,16 +59,52 @@
                 <RadzenRequiredValidator Component="Address" Text="Introducir dirección" Popup="true" Style="position: absolute" />
             </div>
         </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <RadzenLabel Text="Rol"></RadzenLabel>
+                <RadzenDropDown Data="Roles"
+                                TValue="string"
+                                TextProperty="RoleValue"
+                                ValueProperty="RoleValue"
+                                Name="Rol"
+                                @bind-Value="Registration.Role"
+                                class="form-control" />
+                <RadzenRequiredValidator Component="Rol" Text="Introducir rol" Popup="true" Style="position: absolute" />
+            </div>
+        </div>
     </div>
     <div class="form-group text-center mt-3">
-        <RadzenButton Text="Agregar" ButtonType="ButtonType.Submit" Style="background-color:#003053; color: #FFF" />
+        <RadzenButton Text="Aceptar" ButtonType="ButtonType.Submit" Style="background-color:#003053; color: #FFF" />
     </div>
 </RadzenTemplateForm>
 
 @code {
+    [Parameter] public UserModel UserParameter { get; set; } = new UserModel();
+    [Parameter] public Common.FormMode FormMode { get; set; } = Common.FormMode.ADD;
+
+    public bool ShowPasswordInput { get; set; } = true;
+
     public RegistrationModel Registration { get; set; } = new RegistrationModel();
 
+    public List<Role> Roles { get; set; } = new List<Role>
+    {
+        new Role { RoleValue = "Administrator" },
+        new Role { RoleValue = "Operator" }
+    };
+
     private async Task OnSubmit()
+    {
+        if (FormMode == Common.FormMode.ADD)
+        {
+            await Add();
+        }
+        else
+        {
+            await Edit();
+        }
+    }
+
+    public async Task Add()
     {
         var result = await _authService.RegisterAsync(Registration);
 
@@ -78,5 +118,55 @@
 
             DialogService.Close(closeReturn);
         }
+    }
+
+    public async Task Edit()
+    {
+        var userToUpdate = new UserModel
+        {
+            Id = UserParameter.Id,
+            FirstName = Registration.FirstName,
+            LastName = Registration.LastName,
+            Email = Registration.Email,
+            NumberId = Registration.NumberId,
+            Address = Registration.Address,
+            UserName = Registration.UserName,
+            Role = Registration.Role
+        };
+
+        var result = await _userService.UpdateUser(userToUpdate);
+
+        if (result != null)
+        {
+            var closeReturn = result != null ? true : false;
+
+            await SweetAlertServices.ShowSuccessAlert("Usuario actualizado", "El usuario se actualizó correctamente");
+
+            DialogService.Close(closeReturn);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        if (FormMode == Common.FormMode.EDIT)
+        {
+            ShowPasswordInput = false;
+
+            Registration = new RegistrationModel
+            {
+                FirstName = UserParameter.FirstName,
+                LastName = UserParameter.LastName,
+                Email = UserParameter.Email,
+                NumberId = UserParameter.NumberId,
+                Address = UserParameter.Address,
+                UserName = UserParameter.UserName,
+                Role = UserParameter.Role
+            };
+        }
+    }
+
+    public class Role
+    {
+        public string RoleValue { get; set; } = string.Empty;
     }
 }

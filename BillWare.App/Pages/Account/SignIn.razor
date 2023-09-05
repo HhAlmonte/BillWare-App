@@ -24,12 +24,33 @@
 
         if (result.Token != null)
         {
-            await _localStorageService.SetItem("access_token", result.Token);
-            _navigationManager.NavigateTo("/");
+            await _localStorageService.SetItem(Configuration.TOKEN, result.Token);
+            await _localStorageService.SetItem(Configuration.ROLE, result.Role);
+            await _localStorageService.SetItem("FullName", result.FirstName + " " + result.LastName);
+
+            if (result.Role == "Administrator")
+                _navigationManager.NavigateTo("/");
+            else
+                _navigationManager.NavigateTo("/billing/index");
         }
         else
         {
             await SweetAlertServices.ShowErrorAlert("Error", "Usuario o contraseña incorrectos");
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await _localStorageService.GetItem(Configuration.TOKEN);
+
+        if (token != null)
+        {
+            var role = await _localStorageService.GetItem(Configuration.ROLE);
+
+            if (role == "Administrator")
+                _navigationManager.NavigateTo("/");
+            else
+                _navigationManager.NavigateTo("/billing/index");
         }
     }
 }

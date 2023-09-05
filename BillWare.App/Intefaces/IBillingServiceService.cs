@@ -6,8 +6,8 @@ namespace BillWare.App.Intefaces
     {
         Task<BaseResponseModel<BillingServiceModel>> GetBillingsServices(int pageIndex, int pageSize);
         Task<BaseResponseModel<BillingServiceModel>> GetBillingsServicesWithSearch(string search, int pageIndex, int pageSize);
-        Task<HttpResponseMessage> CreateBillingService(BillingServiceModel billingService);
-        Task<HttpResponseMessage> EditBillingService(BillingServiceModel billingService);
-        Task<HttpResponseMessage> DeleteBillingService(int id);
+        Task<BillingServiceModel> CreateBillingService(BillingServiceModel billingService);
+        Task<BillingServiceModel> EditBillingService(BillingServiceModel billingService);
+        Task<bool> DeleteBillingService(int id);
     }
 }
