@@ -85,7 +85,7 @@ namespace BillWare.App.Services
 
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.PutAsJsonAsync("Inventory/EditInventory", inventory);
+                var response = await _httpClient.PutAsJsonAsync("Inventory/UpdateInventory", inventory);
 
                 if (response.IsSuccessStatusCode)
                 {
