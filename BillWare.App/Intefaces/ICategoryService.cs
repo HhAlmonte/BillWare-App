@@ -8,10 +8,10 @@ namespace BillWare.App.Intefaces
 
         Task<BaseResponseModel<CategoryModel>> GetCategoriesPagedWithSearch(int pageIndex, int pageSize, string search);
 
-        Task<HttpResponseMessage> DeleteCategory(int id);
+        Task<bool> DeleteCategory(int id);
 
-        Task<HttpResponseMessage> CreateCategory(CategoryModel category);
+        Task<CategoryModel> CreateCategory(CategoryModel category);
 
-        Task<HttpResponseMessage> EditCategory(CategoryModel category);
+        Task<CategoryModel> EditCategory(CategoryModel category);
     }
 }

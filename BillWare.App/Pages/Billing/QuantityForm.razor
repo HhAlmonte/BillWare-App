@@ -1,0 +1,22 @@
+﻿@inject DialogService DialogService
+
+<RadzenLabel Text="Cantidad: " />
+<RadzenNumeric @bind-Value="Quantity" />
+
+<RadzenButton Text="Aceptar" Click="OnAccept" />
+
+@code {
+    [Parameter] public int QuantityParameter { get; set; }
+
+    private int Quantity { get; set; }
+
+    private void OnAccept()
+    {
+        DialogService.Close(Quantity);
+    }
+
+    protected override void OnInitialized()
+    {
+        Quantity = QuantityParameter;
+    }
+}

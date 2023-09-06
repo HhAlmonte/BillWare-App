@@ -26,56 +26,5 @@
 </RadzenTemplateForm>
 
 @code {
-    [Parameter] public Common.FormMode FormMode { get; set; }
-
-    [Parameter] public CategoryModel CategoryParameter { get; set; } = new CategoryModel();
-
-    private CategoryModel Category = new CategoryModel();
-
-    private string ButtonTitle => FormMode == Common.FormMode.ADD ? "Agregar" : "Editar";
-
-    private async Task OnSubmit()
-    {
-        if (FormMode == Common.FormMode.ADD)
-        {
-            await Add();
-        }
-        else
-        {
-            await Edit();
-        }
-    }
-
-    private async Task Add()
-    {
-        var action = await _categoryService.CreateCategory(Category);
-
-        if (!action.IsSuccessStatusCode)
-        {
-            await SweetAlertServices.ShowErrorAlert("Ocurrió un error", await action.Content.ReadAsStringAsync());
-        }
-        else
-        {
-            var closeReturn = action != null ? true : false;
-
-            DialogService.Close(closeReturn);
-        }
-    }
-
-    private async Task Edit()
-    {
-        var action = await _categoryService.EditCategory(Category);
-
-        var closeReturn = action != null ? true : false;
-
-        DialogService.Close(closeReturn);
-    }
-
-    protected override void OnInitialized()
-    {
-        if (FormMode == Common.FormMode.EDIT)
-        {
-            Category = CategoryParameter;
-        }
-    }
+    
 }

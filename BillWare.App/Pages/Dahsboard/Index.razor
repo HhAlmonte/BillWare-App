@@ -43,9 +43,9 @@
     <span style="margin-right: 1rem;">Buscar:</span>
     <RadzenTextBox Placeholder="Presione ENTER al buscar" Change="@(async(e) => await GetWithSearch(e))" />
     <span style="margin-right: 1rem; margin-left: 1rem">Filtrar por fechas:</span>
-    <RadzenDatePicker @bind-Value="BillingsParamsModel.InitialDate"/>
+    <RadzenDatePicker @bind-Value="BillingsParamsModel.InitialDate" DateFormat="dd/MM/yyyy"/>
     <span style="margin: 0 0.5rem;">hasta</span>
-    <RadzenDatePicker @bind-Value="BillingsParamsModel.FinalDate"/>
+    <RadzenDatePicker @bind-Value="BillingsParamsModel.FinalDate" DateFormat="dd/MM/yyyy"/>
 
     <RadzenButton style="margin-left: 0.5rem" Icon="search" ButtonStyle="ButtonStyle.Success" Click="@(async() => await LoadWithParams())" />
 </div>

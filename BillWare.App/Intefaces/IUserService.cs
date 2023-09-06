@@ -7,5 +7,7 @@ namespace BillWare.App.Intefaces
         Task<BaseResponseModel<UserModel>> GetUsersPaged(int pageIndex, int pageSize);
 
         Task<UserModel> UpdateUser(UserModel user);
+
+        Task <bool> DeleteUser(string id);
     }
 }

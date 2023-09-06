@@ -62,7 +62,7 @@
     private void NavigateTo(string url, int index)
     {
         IsMenuOpen = !IsMenuOpen;
-        DashboardClass = IsMenuOpen ? "menu-dashboard open" : "menu-dashboard";
+        DashboardClass = "menu-dashboard";
         navigationManager.NavigateTo(url);
 
         // Establecer el enlace activo
@@ -72,12 +72,12 @@
     private void LoadMenuItem()
     {
         MenuItems.Add(new MenuItem { Name = "Dashboard", Url = "/", Icon = "bx bx-category", Role = "Administrator" });
-        MenuItems.Add(new MenuItem { Name = "Servicios", Url = "service/index", Icon = "bx bx-category", Role = "Both" });
+        MenuItems.Add(new MenuItem { Name = "Servicios", Url = "service/index", Icon = "bx bx-leaf", Role = "Both" });
         MenuItems.Add(new MenuItem { Name = "Inventario", Url = "inventory/index", Icon = "bx bx-store-alt", Role = "Both" });
         MenuItems.Add(new MenuItem { Name = "Categoría", Url = "category/index", Icon = "bx bx-category", Role = "Both" });
         MenuItems.Add(new MenuItem { Name = "Cliente", Url = "costumer/index", Icon = "bx bx-user", Role = "Both" });
         MenuItems.Add(new MenuItem { Name = "Facturación", Url = "billing/index", Icon = "bx bxs-badge-dollar", Role = "Both" });
-        MenuItems.Add(new MenuItem { Name = "Usuarios", Url = "user/index", Icon = "bx bx-user", Role = "Both" });
+        MenuItems.Add(new MenuItem { Name = "Usuarios", Url = "user/index", Icon = "bx bx-user-circle", Role = "Both" });
     }
 
     protected override async Task OnInitializedAsync()

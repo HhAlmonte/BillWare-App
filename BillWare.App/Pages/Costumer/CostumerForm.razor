@@ -34,55 +34,5 @@
 </RadzenTemplateForm>
 
 @code {
-    [Parameter] public Common.FormMode FormMode { get; set; }
-
-    [Parameter] public Costumer CostumerParameter { get; set; } = new Costumer();
-
-    private Costumer Costumer = new Costumer();
-    private string ButtonTitle => FormMode == Common.FormMode.ADD ? "Agregar" : "Editar";
-
-    private async Task OnSubmit()
-    {
-        if (FormMode == Common.FormMode.ADD)
-        {
-            await Add();
-        }
-        else
-        {
-            await Edit();
-        }
-    }
-
-    private async Task Add()
-    {
-        var action = await _costumerService.CreateCostumer(Costumer);
-
-        if (!action.IsSuccessStatusCode)
-        {
-            await SweetAlertServices.ShowErrorAlert("Ocurrió un error", await action.Content.ReadAsStringAsync());
-        }
-        else
-        {
-            var closeReturn = action != null ? true : false;
-
-            DialogService.Close(closeReturn);
-        }
-    }
-
-    private async Task Edit()
-    {
-        var action = await _costumerService.EditCostumer(Costumer);
-
-        var closeReturn = action != null ? true : false;
-
-        DialogService.Close(closeReturn);
-    }
-
-    protected override void OnInitialized()
-    {
-        if (FormMode == Common.FormMode.EDIT)
-        {
-            Costumer = CostumerParameter;
-        }
-    }
+    
 }

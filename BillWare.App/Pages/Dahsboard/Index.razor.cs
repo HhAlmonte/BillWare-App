@@ -1,14 +1,14 @@
 ﻿using BillWare.App.Models;
 using BillWare.Application.Billing.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Radzen.Blazor;
 
 namespace BillWare.App.Pages.Dahsboard
 {
+    [Authorize(Roles = "Administrator")]
     public partial class Index
     {
-        [Inject] NavigationManager NavigationManager { get; set; }
-
         private BaseResponseModel<BillingModel> BaseResponse { get; set; } = new BaseResponseModel<BillingModel>();
         private BillingsParamsModel BillingsParamsModel { get; set; } = new BillingsParamsModel();
         private RadzenDataGrid<BillingItemModel> grid;
@@ -49,9 +49,10 @@ namespace BillWare.App.Pages.Dahsboard
                 Billings = new List<BillingModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
-
-            BaseResponse = await _billingService.GetBilling(pageIndex, pageSize);
-            Billings = BaseResponse.Items;
+            finally
+            {
+                IsLoading = false;
+            }
         }
         private async Task GetWithSearch(string search)
         {
@@ -182,21 +183,10 @@ namespace BillWare.App.Pages.Dahsboard
             return ((double)value).ToString("C0", System.Globalization.CultureInfo.CreateSpecificCulture("en-US"));
         }
 
-        private async Task EvaluateRol()
-        {
-            var role = await _localStorageService.GetItem(Configuration.ROLE);
-
-            if (role != "Administrator")
-            {
-                NavigationManager.NavigateTo("/account/signin");
-            }
-        }
-
         protected override async Task OnInitializedAsync()
         {
             IsLoading = true;
 
-            await EvaluateRol();
             await LoadData(PageIndex);
             await LoadSalesLast30Days();
             await LoadSalesLast12Month();

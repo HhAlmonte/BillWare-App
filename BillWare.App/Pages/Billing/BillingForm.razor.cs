@@ -3,13 +3,16 @@ using BillWare.Application.Billing.Models;
 using Microsoft.AspNetCore.Components;
 using Radzen.Blazor;
 using Radzen;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BillWare.App.Pages.Billing
 {
+    [Authorize("Administrator, Operator")]
     public partial class BillingForm
     {
         [Parameter] public BillingModel BillingParameter { get; set; } = new BillingModel();
         [Parameter] public Common.FormMode FormMode { get; set; } = Common.FormMode.ADD;
+        [Inject] private LocalStorageService LocalStorageService { get; set; }
 
         private BillingModel Billing = new BillingModel()
         {
@@ -18,12 +21,93 @@ namespace BillWare.App.Pages.Billing
         private RadzenDataGrid<BillingItemModel> grid;
         private Common.InvoiceNumberGenerator InvoiceNumberGenerator = new Common.InvoiceNumberGenerator("FACT");
 
+        private List<PaymentMethod> PaymentMethods { get; set; } = new List<PaymentMethod>
+        {
+            new PaymentMethod
+            {
+                Name = "Efectivo",
+                Id = 1
+            },
+            new PaymentMethod
+            {
+                Name = "Transferencia",
+                Id = 2
+            },
+        };
+
         private List<BillingItemModel> BillingItems { get; set; } = new List<BillingItemModel>();
-        private List<BillingServiceModel> BillingsServices { get; set; } = new List<BillingServiceModel>();
-        private List<BillingServiceModel> BillingsServicesSelected { get; set; } = new List<BillingServiceModel>();
+
+        private List<BillingItemModel> BillingInventoriesItems { get; set; } = new List<BillingItemModel>();
+        private List<BillingItemModel> BillingServicesItems { get; set; } = new List<BillingItemModel>();
+
+        private List<BillingItemModel> Inventories { get; set; } = new List<BillingItemModel>();
+        private List<BillingItemModel> BillingsServices { get; set; } = new List<BillingItemModel>();
+
 
         public string ReturnMoney { get; set; } = "0";
         private string CostumerId { get; set; }
+        private string SellerName { get; set; }
+
+        private void OnDropDowmChange()
+        {
+            BillingItems.Clear();
+
+            foreach (var item in BillingInventoriesItems)
+            {
+                if (!BillingItems.Contains(item))
+                {
+                    BillingItems.Add(item);
+                }
+            }
+
+            foreach (var item in BillingServicesItems)
+            {
+                if (!BillingItems.Contains(item))
+                {
+                    BillingItems.Add(item);
+                }
+            }
+
+            CalculateNetoAndTotalPrice();
+            grid.Reload();
+            StateHasChanged();
+        }
+
+        private async Task OpenQuantityormDialog(int quantity, int code)
+        {
+            var dialogResponse = await DialogService.OpenAsync<QuantityForm>("Modificar cantidad"
+                , parameters: new Dictionary<string, object>
+                    {
+                        { "QuantityParameter", quantity }
+                    }
+                , options: new DialogOptions
+                {
+                    Width = "auto"
+                });
+
+            var index = BillingItems.FindIndex(x => x.Code == code);
+
+            if(dialogResponse != null)
+            {
+                BillingItems[index].Quantity = dialogResponse;
+            }
+            else
+            {
+                BillingItems[index].Quantity = quantity;
+            }
+
+
+            foreach (var i in BillingItems)
+            {
+                i.Amount = i.Quantity * i.Price;
+                i.Tax = CalcularITBIS(i.Quantity * i.Price);
+            }
+
+            CalculateNetoAndTotalPrice();
+
+            await grid.Reload();
+
+        }
 
         private async Task GetCostumer()
         {
@@ -31,32 +115,39 @@ namespace BillWare.App.Pages.Billing
             {
                 await SweetAlertServices.ShowErrorAlert("Codigo invalido", "Primero debe ingresar un código");
             }
-            else
+
+            try
             {
                 int costumerId = Convert.ToInt32(CostumerId);
 
                 var costumer = await _costumerService.GetCostumerById(costumerId);
 
-                if (costumer == null)
-                {
-                    await SweetAlertServices.ShowErrorAlert("Error", "No se encontró ningun cliente con ese código");
-                }
-                else
-                {
-                    Billing.FullName = costumer.FullName;
-                    Billing.Address = costumer.Address;
-                    Billing.Phone = costumer.Phone;
-                    Billing.NumberId = costumer.NumberId;
-                }
-
-                StateHasChanged();
+                Billing.FullName = costumer.FullName;
+                Billing.Address = costumer.Address;
+                Billing.Phone = costumer.Phone;
+                Billing.NumberId = costumer.NumberId;
             }
+            catch (Exception ex)
+            {
+                await SweetAlertServices.ShowErrorAlert("Error encontrando al usuario", "Intenta probando con otro código");
+            }
+
+            StateHasChanged();
         }
+
         private async Task LoadInventories()
         {
             var data = await _inventoryService.GetInventories(1, 50);
 
-            Inventories = data.Items;
+            Inventories = data.Items.Select(x => new BillingItemModel
+            {
+                Code = x.Id,
+                Description = x.Name,
+                Quantity = 1,
+                Price = x.Price,
+                Tax = 0,
+                Amount = x.Price * x.Quantity
+            }).ToList();
 
             StateHasChanged();
         }
@@ -64,59 +155,20 @@ namespace BillWare.App.Pages.Billing
         {
             var data = await _billingServiceService.GetBillingsServices(1, 50);
 
-            BillingsServices = data.Items;
+            BillingsServices = data.Items.Select(x => new BillingItemModel
+            {
+                Code = x.Id,
+                Description = x.Name,
+                Quantity = 1,
+                Price = x.Price,
+                Tax = 0,
+                Amount = x.Price * 1
+
+            }).ToList();
 
             StateHasChanged();
         }
 
-        private async Task OpenInventoryFormDialog(BillingItemModel billingItem = null)
-        {
-            var dialog = await DialogService.OpenAsync<BillingItemForm>("Agregar producto"
-                            , parameters: new Dictionary<string, object>
-                            {
-                            { "BillingItemParameter", billingItem }
-                            }
-                            , options: new DialogOptions
-                            {
-                                Width = "auto"
-                            });
-            if (dialog != null)
-            {
-                var billingItemModel = dialog as BillingItemModel;
-
-                if (billingItem == null)
-                {
-                    BillingItems.Add(billingItemModel);
-
-                    foreach (var i in BillingItems)
-                    {
-                        i.Amount = i.Quantity * i.Price;
-                        i.Tax = CalcularITBIS((decimal)i.Quantity * (decimal)i.Price);
-                    }
-
-                    CalculateNetoAndTotalPrice();
-
-                    await grid.Reload();
-                }
-                else
-                {
-                    var index = BillingItems.FindIndex(x => x.Code == billingItemModel.Code);
-
-                    BillingItems[index] = billingItemModel;
-
-                    foreach (var i in BillingItems)
-                    {
-                        i.Amount = i.Quantity * i.Price;
-                        i.Tax = CalcularITBIS((decimal)i.Quantity * (decimal)i.Price);
-                    }
-
-                    CalculateNetoAndTotalPrice();
-
-                    await grid.Reload();
-                }
-                StateHasChanged();
-            }
-        }
         private async Task DeleteBillingItem(BillingItemModel billingItem)
         {
             if (FormMode == Common.FormMode.EDIT)
@@ -126,6 +178,18 @@ namespace BillWare.App.Pages.Billing
             else
             {
                 var index = BillingItems.FindIndex(x => x.Code == billingItem.Code);
+                var inventoyIndex = BillingInventoriesItems.FindIndex(x => x.Code == billingItem.Code);
+                var serviceIndex = BillingServicesItems.FindIndex(x => x.Code == billingItem.Code);
+
+                if (inventoyIndex != -1)
+                {
+                    BillingInventoriesItems.RemoveAt(inventoyIndex);
+                }
+
+                if (serviceIndex != -1)
+                {
+                    BillingServicesItems.RemoveAt(serviceIndex);
+                }
 
                 BillingItems.RemoveAt(index);
             }
@@ -161,78 +225,48 @@ namespace BillWare.App.Pages.Billing
 
             StateHasChanged();
         }
-        private async Task GetInventoryBySearch(string searchText)
+
+        private async Task GetInventoryWithSearch(string searchText)
         {
             var result = await _inventoryService.GetInventoryWithSearch(searchText, 1, 100);
 
-            Inventories = result.Items;
+            Inventories = result.Items.Select(x => new BillingItemModel
+            {
+                Code = x.Id,
+                Description = x.Name,
+                Quantity = 1,
+                Price = x.Price,
+                Tax = 0,
+                Amount = x.Price * x.Quantity
+            }).ToList();
+
+            StateHasChanged();
         }
         private async Task GetBillingsServicesWithSearch(string searchText)
         {
             var result = await _billingServiceService.GetBillingsServicesWithSearch(searchText, 1, 100);
 
-            BillingsServices = result.Items;
-        }
-        private void OnInventorySelected(object inventorySelected)
-        {
-            InventoriesSelected = (List<Models.Inventory>)inventorySelected;
-
-            foreach (var i in InventoriesSelected)
+            BillingsServices = result.Items.Select(x => new BillingItemModel
             {
-                var quantity = 2;
-                var amount = (int)i.Price * quantity;
+                Code = x.Id,
+                Description = x.Name,
+                Quantity = 1,
+                Price = x.Price,
+                Tax = 0,
+                Amount = x.Price * 1
 
-                BillingItems.Add(new BillingItemModel
-                {
-                    Code = i.Id,
-                    Description = i.Name,
-                    Quantity = quantity,
-                    Price = i.Price,
+            }).ToList();
 
-                    Amount = amount,
-
-                    Tax = CalcularITBIS(amount)
-                });
-            }
-
-            CalculateNetoAndTotalPrice();
-
-            StateHasChanged();
-
-            grid.Reload();
+            StateHasChanged(); ;
         }
-        private void OnBillingServiceSelected(object billingServiceSelected)
-        {
-            BillingsServicesSelected = (List<BillingServiceModel>)billingServiceSelected;
 
-            foreach (var i in BillingsServicesSelected)
-            {
-                var quantity = 1;
-                var amount = (int)i.Price * quantity;
-
-                BillingItems.Add(new BillingItemModel
-                {
-                    Code = i.Id,
-                    Description = i.Name,
-                    Quantity = quantity,
-                    Price = i.Price,
-
-                    Amount = amount,
-
-                    Tax = CalcularITBIS(amount)
-                });
-            }
-
-            CalculateNetoAndTotalPrice();
-
-            StateHasChanged();
-
-            grid.Reload();
-        }
-        private async Task Add()
+        private async Task Add(int billingStatus)
         {
             try
             {
+                Billing.SellerName = SellerName;
+                Billing.BillingStatus = billingStatus;
+
                 var billingCreated = await _billingService.CreateBilling(Billing);
                 await SweetAlertServices.ShowSuccessAlert("Factura creada", "La factura se creó correctamente");
                 DialogService.Close(billingCreated);
@@ -246,10 +280,13 @@ namespace BillWare.App.Pages.Billing
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
         }
-        private async Task Edit()
+        private async Task Edit(int billingStatus)
         {
             try
             {
+                Billing.SellerName = SellerName;
+                Billing.BillingStatus = billingStatus;
+
                 await _billingService.UpdateBilling(Billing);
                 await SweetAlertServices.ShowSuccessAlert("Factura actualizada", "La factura se actualizó correctamente");
                 DialogService.Close(Billing);
@@ -263,22 +300,24 @@ namespace BillWare.App.Pages.Billing
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
         }
-        private async Task OnSubmit()
+        private async Task OnSubmit(int billingStatus = 1)
         {
             Billing.BillingItems = BillingItems;
 
             if (FormMode == Common.FormMode.ADD)
             {
-                await Add();
+                await Add(billingStatus);
             }
             else
             {
-                await Edit();
+                await Edit(billingStatus);
             }
         }
 
-        protected override async void OnInitialized()
+        protected override async Task OnInitializedAsync()
         {
+            SellerName = await LocalStorageService.GetItem("FullName");
+
             await LoadInventories();
 
             await LoadBillingsService();
@@ -312,8 +351,12 @@ namespace BillWare.App.Pages.Billing
 
                 StateHasChanged();
             }
-
-            base.OnInitialized();
         }
+    }
+
+    public class PaymentMethod
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
 }

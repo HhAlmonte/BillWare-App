@@ -10,10 +10,10 @@ namespace BillWare.App.Intefaces
 
         Task<BaseResponseModel<Costumer>> GetCostumersPagedWithSearch(int pageIndex, int pageSize, string search);
 
-        Task<HttpResponseMessage> DeleteCostumer(int id);
+        Task<bool> DeleteCostumer(int id);
 
-        Task<HttpResponseMessage> CreateCostumer(Costumer costumer);
+        Task<Costumer> CreateCostumer(Costumer costumer);
 
-        Task<HttpResponseMessage> EditCostumer(Costumer costumer);
+        Task<Costumer> EditCostumer(Costumer costumer);
     }
 }

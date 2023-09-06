@@ -1,5 +1,6 @@
 ﻿using BillWare.App.Intefaces;
 using BillWare.App.Models;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 namespace BillWare.App.Services
@@ -7,67 +8,163 @@ namespace BillWare.App.Services
     public class InventoryService : IInventoryService
     {
         private readonly HttpClient _httpClient;
+        private readonly LocalStorageService _localStorageService;
 
-        public InventoryService(HttpClient httpClient)
+        public InventoryService(HttpClient httpClient, LocalStorageService localStorageService)
         {
             _httpClient = httpClient;
+            _localStorageService = localStorageService;
         }
 
-        public async Task<HttpResponseMessage> CreateInvetory(Inventory inventory)
+        public async Task<Inventory> CreateInvetory(Inventory inventory)
         {
             try
             {
-                var request = await _httpClient.PostAsJsonAsync("Inventory/CreateInventory", inventory);
+                var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
-                return request;
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.PostAsJsonAsync("Inventory/CreateInventory", inventory);
+
+                if(response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<Inventory>();
+                    return result;
+                }
+                else
+                {
+                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                throw ex;
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw ex;
             }
         }
 
-        public async Task<HttpResponseMessage> DeleteInventory(int id)
+        public async Task<bool> DeleteInventory(int id)
         {
             try
             {
-                var request = await _httpClient.DeleteAsync($"Inventory/DeleteInventory/{id}");
-                return request;
+                var token = await _localStorageService.GetItem(Configuration.TOKEN);
+
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.DeleteAsync($"Inventory/DeleteInventory/{id}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<bool>();
+                    return result;
+                }
+                else
+                {
+                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
+                }
+                
+            }
+            catch (HttpRequestException ex)
+            {
+                throw ex;
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw ex;
             }
         }
 
-        public async Task<HttpResponseMessage> EditInventory(Inventory inventory)
+        public async Task<Inventory> EditInventory(Inventory inventory)
         {
             try
             {
-                var request = await _httpClient.PutAsJsonAsync($"Inventory/UpdateInventory", inventory);
+                var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
-                return request;
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.PutAsJsonAsync("Inventory/EditInventory", inventory);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<Inventory>();
+                    return result;
+                }
+                else
+                {
+                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                throw ex;
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw ex;
             }
         }
 
         public async Task<BaseResponseModel<Inventory>> GetInventories(int pageIndex, int pageSize)
         {
-            var response = await _httpClient
-                .GetFromJsonAsync<BaseResponseModel<Inventory>>($"Inventory/GetInventoriesPaged?pageIndex={pageIndex}&pageSize={pageSize}");
+            try
+            {
+                var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
-            return response;
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.GetAsync($"Inventory/GetInventoriesPaged?pageIndex={pageIndex}&pageSize={pageSize}");
+
+                if(response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<BaseResponseModel<Inventory>>();
+                    return result;
+                }
+                else
+                {
+                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
-        public Task<BaseResponseModel<Inventory>> GetInventoryWithSearch(string search, int pageIndex, int pageSize)
+        public async Task<BaseResponseModel<Inventory>> GetInventoryWithSearch(string search, int pageIndex, int pageSize)
         {
-            var response = _httpClient
-                .GetFromJsonAsync<BaseResponseModel<Inventory>>($"Inventory/GetInventoryWithSearch?search={search}&pageIndex={pageIndex}&pageSize={pageSize}");
+            try
+            {
+                var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
-            return response;
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.GetAsync($"Inventory/GetInventoryWithSearch?search={search}&pageIndex={pageIndex}&pageSize={pageSize}");
+                
+                if(response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<BaseResponseModel<Inventory>>();
+                    return result;
+                }
+                else
+                {
+                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
     }
 }

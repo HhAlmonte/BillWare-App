@@ -2,11 +2,16 @@
 using BillWare.Application.Billing.Models;
 using Radzen.Blazor;
 using Radzen;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components;
 
 namespace BillWare.App.Pages.Billing
 {
+    [Authorize(Roles = "Administrator, Operator")]
     public partial class Index
     {
+        [Inject] LocalStorageService LocalStorageService { get; set; }
+
         private BaseResponseModel<BillingModel> BaseResponse { get; set; } = new BaseResponseModel<BillingModel>();
         private List<BillingModel> Billings { get; set; } = new List<BillingModel>();
         private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
@@ -15,6 +20,7 @@ namespace BillWare.App.Pages.Billing
 
         private bool IsLoading { get; set; } = false;
         private bool IsFiltered { get; set; } = false;
+        private bool IsAdmin { get; set; } = false;
 
         private string Search { get; set; } = string.Empty;
         private string pagingSummaryFormat = "Desplegando página {0} de {1} total {2} registros";
@@ -41,9 +47,10 @@ namespace BillWare.App.Pages.Billing
                 Billings = new List<BillingModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
-            
-            BaseResponse = await _billingService.GetBilling(pageIndex, pageSize);
-            Billings = BaseResponse.Items;
+            finally
+            {
+                IsLoading = false;
+            }
         }
         private async Task GetWithSearch(string search)
         {
@@ -121,14 +128,10 @@ namespace BillWare.App.Pages.Billing
                 }
                 catch (HttpRequestException ex)
                 {
-                    BaseResponse = new BaseResponseModel<BillingModel>();
-                    Billings = new List<BillingModel>();
                     await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
                 }
                 catch (Exception ex)
                 {
-                    BaseResponse = new BaseResponseModel<BillingModel>();
-                    Billings = new List<BillingModel>();
                     await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
                 }
             }
@@ -192,6 +195,7 @@ namespace BillWare.App.Pages.Billing
         private string InvoiceToHtml(BillingModel invoice)
         {
             var totalPrice = invoice.TotalPrice.ToString("C");
+            var paymentMethod = invoice.PaymentMethod == (int)PaymentMethodEnum.Efectivo ? "Efectivo" : "Tarjeta";
 
             var html = $@"
     <style>
@@ -291,7 +295,7 @@ namespace BillWare.App.Pages.Billing
                                 <h3>Factura</h3>
                             </td>
                             <td>
-                                Número de factura: #15225622 <br> Creado por: Hector Almonte
+                                Número de factura: {invoice.InvoiceNumber} <br> Creado por: {invoice.SellerName}
                             </td>
                         </tr>
                     </table>
@@ -302,10 +306,10 @@ namespace BillWare.App.Pages.Billing
                     <table>
                         <tr>
                             <td>
-                                Santo Domingo<br>Distrito Nacional<br>Calle 1
+                                Santo Domingo<br>Distrito Nacional<br>C/ La Esperilla Esq. C/ Mary Don Bosco
                             </td>
                             <td>
-                                Bill Ware<br> 809-000-0000<br> billware@example.com
+                                Flor de Lis<br> 849-653-3384<br> @flordelisbsalon
                             </td>
                         </tr>
                     </table>
@@ -316,11 +320,11 @@ namespace BillWare.App.Pages.Billing
                 <td>Costo de facturación</td>
             </tr>
             <tr class='details'>
-                <td colspan='3'>Efectivo</td>
-                <td>{invoice.TotalPrice}</td>
+                <td colspan='3'>{paymentMethod}</td>
+                <td>{invoice.TotalPrice.ToString("C")}</td>
             </tr>
             <tr class='heading'>
-                <td>Producto</td>
+                <td>Descripción</td>
                 <td>Costo X. Unidad</td>
                 <td>Cantidad</td>
                 <td>Precio</td>
@@ -333,9 +337,9 @@ namespace BillWare.App.Pages.Billing
                 html += $@"
             <tr class='item'>
                 <td>{item.Description}</td>
-                <td>{totalPrice}</td>
-                <td>{item.Quantity}</td>
                 <td>{item.Price}</td>
+                <td>{item.Quantity}</td>
+                <td>{item.Price.ToString("C")}</td>
             </tr>";
             }
 
@@ -398,9 +402,9 @@ namespace BillWare.App.Pages.Billing
         private async Task OpenEditDialogForm(BillingModel billing)
         {
             var dialogResponse = await DialogService.OpenAsync<BillingForm>("Editar Factura"
-                            , parameters: new Dictionary<string, object>() { { "Billing", billing } }
+                            , parameters: new Dictionary<string, object>() { { "BillingParameter", billing }, { "FormMode", Common.FormMode.EDIT } }
                             , options: new DialogOptions
-                                                                      {
+                            {
                                 Width = "1080px",
                                 Height = "auto",
                                 Draggable = true
@@ -440,6 +444,8 @@ namespace BillWare.App.Pages.Billing
         protected override async Task OnInitializedAsync()
         {
             IsLoading = true;
+
+            IsAdmin = await LocalStorageService.GetItem(Configuration.ROLE) == "Administrator" ? true : false;
             await LoadData(PageIndex);
 
             await Task.Delay(1000);

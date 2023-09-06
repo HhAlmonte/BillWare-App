@@ -17,6 +17,7 @@ namespace BillWare.Application.Billing.Models
         public decimal TotalPriceWithTax { get; set; }
         public decimal TotalTax { get; set; }
 
+        public int PaymentMethod { get; set; }
         public int BillingStatus { get; set; }
         public List<BillingItemModel> BillingItems { get; set; }
     }

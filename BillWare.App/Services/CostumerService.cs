@@ -1,5 +1,6 @@
 ﻿using BillWare.App.Intefaces;
 using BillWare.App.Models;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 namespace BillWare.App.Services
@@ -7,50 +8,98 @@ namespace BillWare.App.Services
     public class CostumerService : ICostumerService
     {
         private readonly HttpClient _httpClient;
+        private readonly LocalStorageService _localStorageService;
 
-        public CostumerService(HttpClient httpClient)
+        public CostumerService(HttpClient httpClient, LocalStorageService localStorageService)
         {
             _httpClient = httpClient;
+            _localStorageService = localStorageService;
         }
 
-        public async Task<HttpResponseMessage> CreateCostumer(Costumer costumer)
+        public async Task<Costumer> CreateCostumer(Costumer costumer)
         {
             try
             {
-                var request = await _httpClient.PostAsJsonAsync("Costumer/CreateCostumer", costumer);
+                var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
-                return request;
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.PostAsJsonAsync("Costumer/CreateCostumer", costumer);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<Costumer>();
+                }
+                else
+                {
+                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                throw ex;
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw ex;
             }
         }
 
-        public async Task<HttpResponseMessage> DeleteCostumer(int id)
+        public async Task<bool> DeleteCostumer(int id)
         {
             try
             {
-                var request = await _httpClient.DeleteAsync($"Costumer/DeleteCostumer/{id}");
-                return request;
+                var token = await _localStorageService.GetItem(Configuration.TOKEN);
+
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.DeleteAsync($"Costumer/DeleteCostumer/{id}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<bool>();
+                }
+                else
+                {
+                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                throw ex;
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw ex;
             }
         }
 
-        public async Task<HttpResponseMessage> EditCostumer(Costumer costumer)
+        public async Task<Costumer> EditCostumer(Costumer costumer)
         {
             try
             {
-                var request = await _httpClient.PutAsJsonAsync($"Costumer/UpdateCostumer", costumer);
+                var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
-                return request;
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.PutAsJsonAsync($"Costumer/UpdateCostumer", costumer);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<Costumer>();
+                }
+                else
+                {
+                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                throw ex;
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw ex;
             }
         }
 
@@ -58,30 +107,89 @@ namespace BillWare.App.Services
         {
             try
             {
-                var request = await _httpClient.GetFromJsonAsync<Costumer>($"Costumer/GetCostumerById?id={id}");
+                var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
-                return request;
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.GetAsync($"Costumer/GetCostumerById?id={id}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<Costumer>();
+                }
+                else
+                {
+                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                throw ex;
             }
             catch (Exception ex)
             {
-                return null;
+                throw ex;
             }
         }
 
         public async Task<BaseResponseModel<Costumer>> GetCostumersPaged(int pageIndex, int pageSize)
         {
-            var response = await _httpClient
-                .GetFromJsonAsync<BaseResponseModel<Costumer>>($"Costumer/GetCostumersPaged?pageIndex={pageIndex}&pageSize={pageSize}");
+            try
+            {
+                var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
-            return response;
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.GetAsync($"Costumer/GetCostumersPaged?pageIndex={pageIndex}&pageSize={pageSize}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<BaseResponseModel<Costumer>>();
+                }
+                else
+                {
+                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
+                }
+
+            }
+            catch (HttpRequestException ex)
+            {
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         public async Task<BaseResponseModel<Costumer>> GetCostumersPagedWithSearch(int pageIndex, int pageSize, string search)
         {
-            var response = await _httpClient
-                .GetFromJsonAsync<BaseResponseModel<Costumer>>($"Costumer/GetCostumersPagedWithSearch?pageIndex={pageIndex}&pageSize={pageSize}");
+            try
+            {
+                var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
-            return response;
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.GetAsync($"Costumer/GetCostumersPagedWithSearch?pageIndex={pageIndex}&pageSize={pageSize}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<BaseResponseModel<Costumer>>();
+                }
+                else
+                {
+                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
+                }
+
+            }
+            catch (HttpRequestException ex)
+            {
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
     }
 }

@@ -14,12 +14,22 @@
     </form>
 </div>
 
+
+@if (IsLoading)
+{
+    <LoadingOverlay IsVisible="IsLoading" />
+}
+
 @code
 {
+    private bool IsLoading { get; set; } = false;
+
     private LoginModel SignInModel = new LoginModel();
 
     private async Task HandleLogin()
     {
+        IsLoading = true;
+
         var result = await _authService.LoginAsync(SignInModel);
 
         if (result.Token != null)
@@ -37,7 +47,10 @@
         {
             await SweetAlertServices.ShowErrorAlert("Error", "Usuario o contraseña incorrectos");
         }
+
+        IsLoading = false;
     }
+
 
     protected override async Task OnInitializedAsync()
     {

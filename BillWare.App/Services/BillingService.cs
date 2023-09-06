@@ -53,7 +53,7 @@ namespace BillWare.App.Services
                 var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _httpClient.DeleteAsync($"Billing/DeleteBilling/{id}");
+                var response = await _httpClient.DeleteAsync($"Billing/DeleteBilling?id={id}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -176,7 +176,8 @@ namespace BillWare.App.Services
                 var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _httpClient.GetAsync("Billing/GetLastInvoiceNumber");
+
+                var response = await _httpClient.GetAsync("Billing/GetInvoiceNumber");
 
                 if (response.IsSuccessStatusCode)
                 {

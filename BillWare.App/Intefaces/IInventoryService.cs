@@ -6,8 +6,8 @@ namespace BillWare.App.Intefaces
     {
         Task<BaseResponseModel<Inventory>> GetInventories(int pageIndex, int pageSize);
         Task<BaseResponseModel<Inventory>> GetInventoryWithSearch(string search, int pageIndex, int pageSize);
-        Task<HttpResponseMessage> CreateInvetory(Inventory inventory);
-        Task<HttpResponseMessage> EditInventory(Inventory inventory);
-        Task<HttpResponseMessage> DeleteInventory(int id);
+        Task<Inventory> CreateInvetory(Inventory inventory);
+        Task<Inventory> EditInventory(Inventory inventory);
+        Task<bool> DeleteInventory(int id);
     }
 }
