@@ -1,4 +1,4 @@
-﻿namespace BillWare.App.Common
+﻿namespace BillWare.App.Helpers
 {
     public class InvoiceNumberGenerator
     {
@@ -12,7 +12,7 @@
         public string GenerateNumber(int numeroFactura = 1)
         {
             numeroFactura++;
-            return $"{this.prefijo}-{numeroFactura:D4}";
+            return $"{prefijo}-{numeroFactura:D4}";
         }
     }
 }

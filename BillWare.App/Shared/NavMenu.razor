@@ -1,5 +1,7 @@
 ﻿@inject NavigationManager navigationManager;
-@inject LocalStorageService _localStorageService;
+@inject IJWTAuthenticationStateProvider _jwtAuthenticationStateProvider;
+
+
 
 <div class="@DashboardClass">
     <div class="container body-color">
@@ -40,52 +42,6 @@
 </div>
 
 @code {
-    private bool IsMenuOpen = false;
-    private string DashboardClass = "menu-dashboard";
-    private string Role = string.Empty;
-    private List<MenuItem> MenuItems = new List<MenuItem>();
-    private int ActiveLinkIndex = -1; 
-
-    private void ToggleMenu()
-    {
-        IsMenuOpen = !IsMenuOpen;
-        DashboardClass = IsMenuOpen ? "menu-dashboard open" : "menu-dashboard";
-    }
-
-    private async Task LogOut()
-    {
-        await _localStorageService.RemoveItem(Configuration.TOKEN);
-
-        navigationManager.NavigateTo("account/signin");
-    }
-
-    private void NavigateTo(string url, int index)
-    {
-        IsMenuOpen = !IsMenuOpen;
-        DashboardClass = "menu-dashboard";
-        navigationManager.NavigateTo(url);
-
-        // Establecer el enlace activo
-        ActiveLinkIndex = index;
-    }
-
-    private void LoadMenuItem()
-    {
-        MenuItems.Add(new MenuItem { Name = "Dashboard", Url = "/", Icon = "bx bx-category", Role = "Administrator" });
-        MenuItems.Add(new MenuItem { Name = "Servicios", Url = "service/index", Icon = "bx bx-leaf", Role = "Both" });
-        MenuItems.Add(new MenuItem { Name = "Inventario", Url = "inventory/index", Icon = "bx bx-store-alt", Role = "Both" });
-        MenuItems.Add(new MenuItem { Name = "Categoría", Url = "category/index", Icon = "bx bx-category", Role = "Both" });
-        MenuItems.Add(new MenuItem { Name = "Cliente", Url = "costumer/index", Icon = "bx bx-user", Role = "Both" });
-        MenuItems.Add(new MenuItem { Name = "Facturación", Url = "billing/index", Icon = "bx bxs-badge-dollar", Role = "Both" });
-        MenuItems.Add(new MenuItem { Name = "Usuarios", Url = "user/index", Icon = "bx bx-user-circle", Role = "Administrator" });
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        LoadMenuItem();
-        Role = await _localStorageService.GetItem(Configuration.ROLE);
-    }
-
     public class MenuItem
     {
         public string Name { get; set; }

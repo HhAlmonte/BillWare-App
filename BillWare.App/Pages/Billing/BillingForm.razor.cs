@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components;
 using Radzen.Blazor;
 using Radzen;
 using Microsoft.AspNetCore.Authorization;
+using BillWare.App.Helpers;
 
 namespace BillWare.App.Pages.Billing
 {
@@ -11,15 +12,15 @@ namespace BillWare.App.Pages.Billing
     public partial class BillingForm
     {
         [Parameter] public BillingModel BillingParameter { get; set; } = new BillingModel();
-        [Parameter] public Common.FormMode FormMode { get; set; } = Common.FormMode.ADD;
-        [Inject] private LocalStorageService LocalStorageService { get; set; }
+        [Parameter] public Common.FormModeEnum FormMode { get; set; } = Common.FormModeEnum.ADD;
+        [Inject] private LocalStorageHelper LocalStorageService { get; set; }
 
         private BillingModel Billing = new BillingModel()
         {
             CreatedAt = DateTime.Now
         };
         private RadzenDataGrid<BillingItemModel> grid;
-        private Common.InvoiceNumberGenerator InvoiceNumberGenerator = new Common.InvoiceNumberGenerator("FACT");
+        private InvoiceNumberGenerator InvoiceNumberGenerator = new Common.InvoiceNumberGenerator("FACT");
 
         private List<PaymentMethod> PaymentMethods { get; set; } = new List<PaymentMethod>
         {
@@ -171,7 +172,7 @@ namespace BillWare.App.Pages.Billing
 
         private async Task DeleteBillingItem(BillingItemModel billingItem)
         {
-            if (FormMode == Common.FormMode.EDIT)
+            if (FormMode == Common.FormModeEnum.EDIT)
             {
                 await _billingItemService.DeleteBillingItem(billingItem.Id);
             }
@@ -304,7 +305,7 @@ namespace BillWare.App.Pages.Billing
         {
             Billing.BillingItems = BillingItems;
 
-            if (FormMode == Common.FormMode.ADD)
+            if (FormMode == Common.FormModeEnum.ADD)
             {
                 await Add(billingStatus);
             }
@@ -322,7 +323,7 @@ namespace BillWare.App.Pages.Billing
 
             await LoadBillingsService();
 
-            if (FormMode == Common.FormMode.EDIT)
+            if (FormMode == Common.FormModeEnum.EDIT)
             {
                 Billing = BillingParameter;
 

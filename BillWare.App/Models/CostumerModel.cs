@@ -2,7 +2,7 @@
 
 namespace BillWare.App.Models
 {
-    public class Costumer : BaseModel
+    public class CostumerModel : BaseModel
     {
         public string FullName { get; set; }
         public string? Phone { get; set; }

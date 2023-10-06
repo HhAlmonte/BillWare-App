@@ -1,4 +1,4 @@
-﻿namespace BillWare.App.Common
+﻿namespace BillWare.App.Enum
 {
     public enum BillingStatus
     {

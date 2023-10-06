@@ -8,69 +8,49 @@ namespace BillWare.App.Services
     public class DashboardService : IDashboardService
     {
         private readonly HttpClient _httpClient;
-        private readonly LocalStorageService _localStorageService;
+        private readonly LocalStorageHelper _localStorageService;
 
-        public DashboardService(HttpClient httpClient, LocalStorageService localStorageService)
+        public DashboardService(HttpClient http, LocalStorageHelper localStorageService)
         {
-            _httpClient = httpClient;
+            _httpClient = http;
             _localStorageService = localStorageService;
         }
 
         public async Task<List<StatisticsModel>> GetSalesLast12Month()
         {
-            try
-            {
-                var token = await _localStorageService.GetItem(Configuration.TOKEN);
+            var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _httpClient.GetAsync($"Dashboard/GetSalesLast12Month");
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<List<StatisticsModel>>();
-                    return result;
-                }
-                else
-                {
-                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
-                }
-            }
-            catch (HttpRequestException ex)
+            var response = await _httpClient.GetAsync($"Dashboard/GetSalesLast12Month");
+
+            if (response.IsSuccessStatusCode)
             {
-                throw ex;
+                var result = await response.Content.ReadFromJsonAsync<List<StatisticsModel>>();
+                return result;
             }
-            catch (Exception ex)
+            else
             {
-                throw ex;
+                throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
             }
         }
 
         public async Task<List<StatisticsModel>> GetSalesLast30Days()
         {
-            try
-            {
-                var token = await _localStorageService.GetItem(Configuration.TOKEN);
+            var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _httpClient.GetAsync($"Dashboard/GetSalesLast30Days");
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<List<StatisticsModel>>();
-                    return result;
-                }
-                else
-                {
-                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
-                }
-            }
-            catch (HttpRequestException ex)
+            var response = await _httpClient.GetAsync($"Dashboard/GetSalesLast30Days");
+
+            if (response.IsSuccessStatusCode)
             {
-                throw ex;
+                var result = await response.Content.ReadFromJsonAsync<List<StatisticsModel>>();
+                return result;
             }
-            catch (Exception ex)
+            else
             {
-                throw ex;
+                throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
             }
         }
     }

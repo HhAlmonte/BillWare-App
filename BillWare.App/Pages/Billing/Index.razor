@@ -1,6 +1,4 @@
-﻿@using BillWare.Application.Billing.Models;
-
-@page "/billing/index"
+﻿@page "/billing/index"
 
 @inject IBillingItemService _billingItemService;
 @inject IBillingService _billingService;
@@ -26,7 +24,7 @@
         <RadzenCard Style="margin-bottom:20px">
             productos registrados por el cliente: <b>@billingItems.FullName (@billingItems.BillingItems.Count())   </b>
 
-            @if(billingItems.BillingStatus == (int)Common.BillingStatus.Pendiente)
+            @if(billingItems.BillingStatus == (int)Common.BillingStatusEnum.Pendiente)
             {
                 <RadzenButton ButtonStyle="ButtonStyle.Warning" Text="Imprimir factura" Click="@(() => PrintInvoice(billingItems))"/>
             }
@@ -53,9 +51,9 @@
                     </Template>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn TItem="BillingItemModel" Property="CreatedAt" Title="Fecha de creación" />
-                <RadzenDataGridColumn TItem="BillingItemModel" Title="Acciones" TextAlign="TextAlign.Center" Visible="billingItems.BillingStatus == (int)Common.BillingStatus.Pendiente">
+                <RadzenDataGridColumn TItem="BillingItemModel" Title="Acciones" TextAlign="TextAlign.Center" Visible="billingItems.BillingStatus == (int)Common.BillingStatusEnum.Pendiente">
                     <Template Context="actions">
-                        @if (billingItems.BillingStatus == (int)Common.BillingStatus.Pendiente)
+                        @if (billingItems.BillingStatus == (int)Common.BillingStatusEnum.Pendiente)
                         {
                             <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await DeleteBillingItem(actions.Id))"/>
                         }
@@ -92,14 +90,14 @@
                               Title="Estatus">
             <Template Context="status">
                 @{
-                    var statusName = (Common.BillingStatus)status.BillingStatus;
+                    var statusName = (Common.BillingStatusEnum)status.BillingStatus;
                 }
                 @switch (statusName)
                 {
-                    case Common.BillingStatus.Pagado:
+                    case Common.BillingStatusEnum.Pagado:
                         <RadzenBadge BadgeStyle="BadgeStyle.Success" Shade="Shade.Lighter" class="price-badge" Text="@statusName.ToString()" />
                         break;
-                    case Common.BillingStatus.Pendiente:
+                    case Common.BillingStatusEnum.Pendiente:
                         <RadzenBadge BadgeStyle="BadgeStyle.Danger" Shade="Shade.Lighter" class="price-badge" Text="@statusName.ToString()" />
                         break;
                 }
@@ -134,7 +132,7 @@
                               Context="data"
                               TextAlign="TextAlign.Center">
             <Template Context="actions">
-                @if(actions.BillingStatus == (int)Common.BillingStatus.Pendiente)
+                @if(actions.BillingStatus == (int)Common.BillingStatusEnum.Pendiente)
                 {
                     <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await Delete(actions.Id))" Visible="IsAdmin"/>
                     <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Click="@(async() => await OpenEditDialogForm(actions))" />

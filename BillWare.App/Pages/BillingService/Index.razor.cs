@@ -1,4 +1,5 @@
-﻿using BillWare.App.Models;
+﻿using BillWare.App.Common;
+using BillWare.App.Models;
 using Microsoft.AspNetCore.Components;
 using Radzen;
 
@@ -6,9 +7,9 @@ namespace BillWare.App.Pages.BillingService
 {
     public partial class Index
     {
-        [Inject] private LocalStorageService LocalStorageService { get; set; }
+        [Inject] private LocalStorageHelper LocalStorageService { get; set; }
 
-        private BaseResponseModel<BillingServiceModel> BaseResponse { get; set; } = new BaseResponseModel<BillingServiceModel>();
+        private PaginationResult<BillingServiceModel> BaseResponse { get; set; } = new PaginationResult<BillingServiceModel>();
         private List<BillingServiceModel> BillingsServices { get; set; } = new List<BillingServiceModel>();
         private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
 
@@ -26,7 +27,7 @@ namespace BillWare.App.Pages.BillingService
             var action = await DialogService.OpenAsync<BillingServiceForm>(title,
             new Dictionary<string, object>
                     {
-            { "FormMode", Common.FormMode.ADD }
+            { "FormMode", Common.FormModeEnum.ADD }
                     },
             new DialogOptions
             {
@@ -49,7 +50,7 @@ namespace BillWare.App.Pages.BillingService
             var action = await DialogService.OpenAsync<BillingServiceForm>(title,
             new Dictionary<string, object>
                             {
-                    { "FormMode", Common.FormMode.EDIT },
+                    { "FormMode", Common.FormModeEnum.EDIT },
                     { "BillingServiceParameter", billingService }
                             },
             new DialogOptions
@@ -80,13 +81,13 @@ namespace BillWare.App.Pages.BillingService
             }
             catch (HttpRequestException ex)
             {
-                BaseResponse = new BaseResponseModel<BillingServiceModel>();
+                BaseResponse = new PaginationResult<BillingServiceModel>();
                 BillingsServices = new List<BillingServiceModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
             catch (Exception ex)
             {
-                BaseResponse = new BaseResponseModel<BillingServiceModel>();
+                BaseResponse = new PaginationResult<BillingServiceModel>();
                 BillingsServices = new List<BillingServiceModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
@@ -113,13 +114,13 @@ namespace BillWare.App.Pages.BillingService
             }
             catch (HttpRequestException ex)
             {
-                BaseResponse = new BaseResponseModel<BillingServiceModel>();
+                BaseResponse = new PaginationResult<BillingServiceModel>();
                 BillingsServices = new List<BillingServiceModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
             catch (Exception ex)
             {
-                BaseResponse = new BaseResponseModel<BillingServiceModel>();
+                BaseResponse = new PaginationResult<BillingServiceModel>();
                 BillingsServices = new List<BillingServiceModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }

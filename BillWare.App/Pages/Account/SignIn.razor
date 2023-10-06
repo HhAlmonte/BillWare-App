@@ -1,6 +1,6 @@
-﻿@inject IAuthService _authService;
+﻿@inject IJWTAuthenticationStateProvider _authenticationStateProvider;
 @inject NavigationManager _navigationManager;
-@inject LocalStorageService _localStorageService;
+@inject LocalStorageHelper _localStorageService;
 
 @page "/account/signin"
 
@@ -22,51 +22,9 @@
 
 @code
 {
-    private bool IsLoading { get; set; } = false;
-
-    private LoginModel SignInModel = new LoginModel();
-
-    private async Task HandleLogin()
-    {
-        IsLoading = true;
-
-        var result = await _authService.LoginAsync(SignInModel);
-
-        if (result.Token != null)
-        {
-            await _localStorageService.SetItem(Configuration.TOKEN, result.Token);
-            await _localStorageService.SetItem(Configuration.ROLE, result.Role);
-            await _localStorageService.SetItem("FullName", result.FirstName + " " + result.LastName);
-
-            if (result.Role == "Administrator")
-                _navigationManager.NavigateTo("/");
-            else
-                _navigationManager.NavigateTo("/billing/index");
-        }
-        else
-        {
-            await SweetAlertServices.ShowErrorAlert("Error", "Usuario o contraseña incorrectos");
-        }
-
-        IsLoading = false;
-    }
-
-
-    protected override async Task OnInitializedAsync()
-    {
-        var token = await _localStorageService.GetItem(Configuration.TOKEN);
-
-        if (token != null)
-        {
-            var role = await _localStorageService.GetItem(Configuration.ROLE);
-
-            if (role == "Administrator")
-                _navigationManager.NavigateTo("/");
-            else
-                _navigationManager.NavigateTo("/billing/index");
-        }
-    }
+    
 }
+
 <style>
 
     body {

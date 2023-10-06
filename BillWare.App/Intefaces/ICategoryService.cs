@@ -1,12 +1,13 @@
-﻿using BillWare.App.Models;
+﻿using BillWare.App.Common;
+using BillWare.App.Models;
 
 namespace BillWare.App.Intefaces
 {
     public interface ICategoryService
     {
-        Task<BaseResponseModel<CategoryModel>> GetCategoriesPaged(int pageIndex, int pageSize);
+        Task<PaginationResult<CategoryModel>> GetCategoriesPaged(int pageIndex, int pageSize);
 
-        Task<BaseResponseModel<CategoryModel>> GetCategoriesPagedWithSearch(int pageIndex, int pageSize, string search);
+        Task<PaginationResult<CategoryModel>> GetCategoriesPagedWithSearch(int pageIndex, int pageSize, string search);
 
         Task<bool> DeleteCategory(int id);
 

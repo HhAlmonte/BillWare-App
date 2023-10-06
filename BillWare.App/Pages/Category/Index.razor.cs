@@ -1,4 +1,5 @@
-﻿using BillWare.App.Models;
+﻿using BillWare.App.Common;
+using BillWare.App.Models;
 using BillWare.Application.Billing.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
@@ -10,9 +11,9 @@ namespace BillWare.App.Pages.Category
     [Authorize("Administrator, Operator")]
     public partial class Index
     {
-        [Inject] private LocalStorageService LocalStorageService { get; set; }
+        [Inject] private LocalStorageHelper LocalStorageService { get; set; }
 
-        private BaseResponseModel<CategoryModel> BaseResponse { get; set; } = new BaseResponseModel<CategoryModel>();
+        private PaginationResult<CategoryModel> BaseResponse { get; set; } = new PaginationResult<CategoryModel>();
         private List<CategoryModel> Categories { get; set; } = new List<CategoryModel>();
         private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
 
@@ -32,7 +33,7 @@ namespace BillWare.App.Pages.Category
             var action = await DialogService.OpenAsync<CategoryForm>(title,
             new Dictionary<string, object>
             {
-            { "FormMode", Common.FormMode.ADD }
+            { "FormMode", Common.FormModeEnum.ADD }
             },
             new DialogOptions
             {
@@ -56,7 +57,7 @@ namespace BillWare.App.Pages.Category
             var action = await DialogService.OpenAsync<CategoryForm>(title,
             new Dictionary<string, object>
                         {
-                    { "FormMode", Common.FormMode.EDIT },
+                    { "FormMode", Common.FormModeEnum.EDIT },
                     { "CategoryParameter", category }
                         },
             new DialogOptions
@@ -86,13 +87,13 @@ namespace BillWare.App.Pages.Category
             }
             catch (HttpRequestException ex)
             {
-                BaseResponse = new BaseResponseModel<CategoryModel>();
+                BaseResponse = new PaginationResult<CategoryModel>();
                 Categories = new List<CategoryModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
             catch (Exception ex)
             {
-                BaseResponse = new BaseResponseModel<CategoryModel>();
+                BaseResponse = new PaginationResult<CategoryModel>();
                 Categories = new List<CategoryModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }

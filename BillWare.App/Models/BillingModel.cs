@@ -20,5 +20,7 @@ namespace BillWare.Application.Billing.Models
         public int PaymentMethod { get; set; }
         public int BillingStatus { get; set; }
         public List<BillingItemModel> BillingItems { get; set; }
+
+        public byte[]? InvoiceDocument { get; set; }
     }
 }

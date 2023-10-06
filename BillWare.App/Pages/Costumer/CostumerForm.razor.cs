@@ -7,16 +7,16 @@ namespace BillWare.App.Pages.Costumer
     [Authorize("Administrator, Operator")]
     public partial class CostumerForm
     {
-        [Parameter] public Common.FormMode FormMode { get; set; }
+        [Parameter] public Common.FormModeEnum FormMode { get; set; }
 
-        [Parameter] public Models.Costumer CostumerParameter { get; set; } = new Models.Costumer();
+        [Parameter] public Models.CostumerModel CostumerParameter { get; set; } = new Models.CostumerModel();
 
-        private Models.Costumer Costumer = new Models.Costumer();
-        private string ButtonTitle => FormMode == Common.FormMode.ADD ? "Agregar" : "Editar";
+        private Models.CostumerModel Costumer = new Models.CostumerModel();
+        private string ButtonTitle => FormMode == Common.FormModeEnum.ADD ? "Agregar" : "Editar";
 
         private async Task OnSubmit()
         {
-            if (FormMode == Common.FormMode.ADD)
+            if (FormMode == Common.FormModeEnum.ADD)
             {
                 await Add();
             }
@@ -60,7 +60,7 @@ namespace BillWare.App.Pages.Costumer
 
         protected override void OnInitialized()
         {
-            if (FormMode == Common.FormMode.EDIT)
+            if (FormMode == Common.FormModeEnum.EDIT)
             {
                 Costumer = CostumerParameter;
             }

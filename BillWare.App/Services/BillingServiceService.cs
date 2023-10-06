@@ -1,4 +1,5 @@
-﻿using BillWare.App.Intefaces;
+﻿using BillWare.App.Common;
+using BillWare.App.Intefaces;
 using BillWare.App.Models;
 using BillWare.Application.Billing.Models;
 using System.Net.Http.Headers;
@@ -7,12 +8,12 @@ using System.Reflection;
 
 namespace BillWare.App.Services
 {
-    public class BillingServiceService : IBillingServiceService
+    public class BillingServiceService : IServicesService
     {
         private readonly HttpClient _httpClient;
-        private readonly LocalStorageService _localStorageService;
+        private readonly LocalStorageHelper _localStorageService;
 
-        public BillingServiceService(HttpClient http, LocalStorageService localStorageService)
+        public BillingServiceService(HttpClient http, LocalStorageHelper localStorageService)
         {
             _httpClient = http;
             _localStorageService = localStorageService;
@@ -83,7 +84,7 @@ namespace BillWare.App.Services
 
                 var response = await _httpClient.PutAsJsonAsync("BillingService/UpdateBillingService", billingService);
 
-                if(response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadFromJsonAsync<BillingServiceModel>();
                     return result;
@@ -103,7 +104,7 @@ namespace BillWare.App.Services
             }
         }
 
-        public async Task<BaseResponseModel<BillingServiceModel>> GetBillingsServices(int pageIndex, int pageSize)
+        public async Task<PaginationResult<BillingServiceModel>> GetBillingsServices(int pageIndex, int pageSize)
         {
             try
             {
@@ -113,9 +114,9 @@ namespace BillWare.App.Services
 
                 var response = await _httpClient.GetAsync($"BillingService/GetBillingsServicesPaged?pageIndex={pageIndex}&pageSize={pageSize}");
 
-                if(response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<BaseResponseModel<BillingServiceModel>>();
+                    var result = await response.Content.ReadFromJsonAsync<PaginationResult<BillingServiceModel>>();
                     return result;
                 }
                 else
@@ -133,7 +134,7 @@ namespace BillWare.App.Services
             }
         }
 
-        public async Task<BaseResponseModel<BillingServiceModel>> GetBillingsServicesWithSearch(string search, int pageIndex, int pageSize)
+        public async Task<PaginationResult<BillingServiceModel>> GetBillingsServicesWithSearch(string search, int pageIndex, int pageSize)
         {
             try
             {
@@ -145,7 +146,7 @@ namespace BillWare.App.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<BaseResponseModel<BillingServiceModel>>();
+                    var result = await response.Content.ReadFromJsonAsync<PaginationResult<BillingServiceModel>>();
                     return result;
                 }
                 else

@@ -1,4 +1,4 @@
-﻿using BillWare.App.Models;
+﻿using BillWare.App.Common;
 using BillWare.Application.Billing.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
@@ -9,10 +9,10 @@ namespace BillWare.App.Pages.Inventory
     [Authorize(Roles = "Administrator, Operator")]
     public partial class Index
     {
-        [Inject] LocalStorageService LocalStorageService { get; set; }
+        [Inject] LocalStorageHelper LocalStorageService { get; set; }
 
-        private BaseResponseModel<Models.Inventory> BaseResponse { get; set; } = new BaseResponseModel<Models.Inventory>();
-        private List<Models.Inventory> Inventories { get; set; } = new List<Models.Inventory>();
+        private PaginationResult<Models.InventoryModel> BaseResponse { get; set; } = new PaginationResult<Models.InventoryModel>();
+        private List<Models.InventoryModel> Inventories { get; set; } = new List<Models.InventoryModel>();
         private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
 
         private bool IsLoading { get; set; } = false;
@@ -35,14 +35,14 @@ namespace BillWare.App.Pages.Inventory
             }
             catch (HttpRequestException ex)
             {
-                BaseResponse = new BaseResponseModel<Models.Inventory>();
-                Inventories = new List<Models.Inventory>();
+                BaseResponse = new PaginationResult<Models.InventoryModel>();
+                Inventories = new List<Models.InventoryModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
             catch (Exception ex)
             {
-                BaseResponse = new BaseResponseModel<Models.Inventory>();
-                Inventories = new List<Models.Inventory>();
+                BaseResponse = new PaginationResult<Models.InventoryModel>();
+                Inventories = new List<Models.InventoryModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
         }
@@ -145,7 +145,7 @@ namespace BillWare.App.Pages.Inventory
             var dialogResponse = await DialogService.OpenAsync<InventoryForm>(title,
             new Dictionary<string, object>
                 {
-                    { "FormMode", Common.FormMode.ADD }
+                    { "FormMode", Common.FormModeEnum.ADD }
                 },
             new DialogOptions
                 {
@@ -164,12 +164,12 @@ namespace BillWare.App.Pages.Inventory
             }
         }
 
-        private async Task OpenEditDialogForm(string title, Models.Inventory inventory)
+        private async Task OpenEditDialogForm(string title, Models.InventoryModel inventory)
         {
             var action = await DialogService.OpenAsync<InventoryForm>(title,
             new Dictionary<string, object>
                 {
-                    { "FormMode", Common.FormMode.EDIT },
+                    { "FormMode", Common.FormModeEnum.EDIT },
                     { "InventoryParameter", inventory }
                 },
             new DialogOptions

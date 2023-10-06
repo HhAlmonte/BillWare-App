@@ -2,7 +2,7 @@
 
 namespace BillWare.App.Models
 {
-    public class Inventory : BaseModel
+    public class InventoryModel : BaseModel
     {
         public string Name { get; set; }
         public string Description { get; set; }

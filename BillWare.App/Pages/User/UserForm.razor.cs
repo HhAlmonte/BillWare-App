@@ -8,7 +8,7 @@ namespace BillWare.App.Pages.User
     public partial class UserForm
     {
         [Parameter] public UserModel UserParameter { get; set; } = new UserModel();
-        [Parameter] public Common.FormMode FormMode { get; set; } = Common.FormMode.ADD;
+        [Parameter] public Common.FormModeEnum FormMode { get; set; } = Common.FormModeEnum.ADD;
 
         public bool ShowPasswordInput { get; set; } = true;
 
@@ -22,7 +22,7 @@ namespace BillWare.App.Pages.User
 
         private async Task OnSubmit()
         {
-            if (FormMode == Common.FormMode.ADD)
+            if (FormMode == Common.FormModeEnum.ADD)
             {
                 await Add();
             }
@@ -80,7 +80,7 @@ namespace BillWare.App.Pages.User
 
         protected override void OnInitialized()
         {
-            if (FormMode == Common.FormMode.EDIT)
+            if (FormMode == Common.FormModeEnum.EDIT)
             {
                 ShowPasswordInput = false;
 

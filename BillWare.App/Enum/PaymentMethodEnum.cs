@@ -1,4 +1,4 @@
-﻿namespace BillWare.App.Models
+﻿namespace BillWare.App.Enum
 {
     public enum PaymentMethodEnum
     {

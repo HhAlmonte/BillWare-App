@@ -1,18 +1,21 @@
-﻿using BillWare.App.Models;
-using BillWare.Application.Billing.Models;
+﻿using BillWare.Application.Billing.Models;
 using Radzen.Blazor;
 using Radzen;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using BillWare.App.Services;
+using BillWare.App.Enum;
+using BillWare.App.Common;
 
 namespace BillWare.App.Pages.Billing
 {
     [Authorize(Roles = "Administrator, Operator")]
     public partial class Index
     {
-        [Inject] LocalStorageService LocalStorageService { get; set; }
+        [Inject] LocalStorageHelper LocalStorageService { get; set; }
+        [Inject] PdfConversionHelper pdfConversionService { get; set; }
 
-        private BaseResponseModel<BillingModel> BaseResponse { get; set; } = new BaseResponseModel<BillingModel>();
+        private PaginationResult<BillingModel> BaseResponse { get; set; } = new PaginationResult<BillingModel>();
         private List<BillingModel> Billings { get; set; } = new List<BillingModel>();
         private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
 
@@ -32,18 +35,18 @@ namespace BillWare.App.Pages.Billing
         {
             try
             {
-                BaseResponse = await _billingService.GetBilling(pageIndex, pageSize);
+                BaseResponse = await _billingService.GetBillings(pageIndex, pageSize);
                 Billings = BaseResponse.Items;
             }
             catch (HttpRequestException ex)
             {
-                BaseResponse = new BaseResponseModel<BillingModel>();
+                BaseResponse = new PaginationResult<BillingModel>();
                 Billings = new List<BillingModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
             catch (Exception ex)
             {
-                BaseResponse = new BaseResponseModel<BillingModel>();
+                BaseResponse = new PaginationResult<BillingModel>();
                 Billings = new List<BillingModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
@@ -67,19 +70,19 @@ namespace BillWare.App.Pages.Billing
                 }
                 else
                 {
-                    BaseResponse = await _billingService.GetBillingWithSearch(Search, PageIndex, PageSize);
+                    BaseResponse = await _billingService.GetBillingsWithSearch(Search, PageIndex, PageSize);
                     Billings = BaseResponse.Items;
                 }
             }
             catch (HttpRequestException ex)
             {
-                BaseResponse = new BaseResponseModel<BillingModel>();
+                BaseResponse = new PaginationResult<BillingModel>();
                 Billings = new List<BillingModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
             catch (Exception ex)
             {
-                BaseResponse = new BaseResponseModel<BillingModel>();
+                BaseResponse = new PaginationResult<BillingModel>();
                 Billings = new List<BillingModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
@@ -152,13 +155,13 @@ namespace BillWare.App.Pages.Billing
                 }
                 catch (HttpRequestException ex)
                 {
-                    BaseResponse = new BaseResponseModel<BillingModel>();
+                    BaseResponse = new PaginationResult<BillingModel>();
                     Billings = new List<BillingModel>();
                     await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
                 }
                 catch (Exception ex)
                 {
-                    BaseResponse = new BaseResponseModel<BillingModel>();
+                    BaseResponse = new PaginationResult<BillingModel>();
                     Billings = new List<BillingModel>();
                     await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
                 }
@@ -167,28 +170,33 @@ namespace BillWare.App.Pages.Billing
 
         private async Task PrintInvoice(BillingModel billing)
         {
-            billing.BillingStatus = (int)Common.BillingStatus.Pagado;
-
-            var htmlContent = InvoiceToHtml(billing);
-
-            await JSRuntimeInvoke.PrintHtml(js, htmlContent);
+            billing.BillingStatus = (int)Common.BillingStatusEnum.Pagado;
 
             try
             {
+
+                var htmlContent = InvoiceToHtml(billing);
+                
+
+                billing.InvoiceDocument = await pdfConversionService.ConvertHtmlToPdf(htmlContent);
+
                 var invoiceUpdated = await _billingService.UpdateBilling(billing);
+                var printInvoice = await SweetAlertServices.ShowWarningAlert("¿Desea imprimir la factura?", "Se abrirá una nueva ventana para imprimir la factura.");
+                
+                if (printInvoice)
+                {
+                    await JSRuntimeInvoke.PrintHtml(js, htmlContent);
+                }
+
+                await SweetAlertServices.ShowSuccessAlert("Proceso de facturació completado exitosamente", $"La factura se ha pagado correctamente. Se envió la factura al siguiente correo: hbalmontess272@gmail.com");
                 await LoadData(PageIndex, PageSize);
-                await SweetAlertServices.ShowSuccessAlert("Factura pagada", "La factura se ha pagado correctamente");
             }
             catch (HttpRequestException ex)
             {
-                BaseResponse = new BaseResponseModel<BillingModel>();
-                Billings = new List<BillingModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
             catch (Exception ex)
             {
-                BaseResponse = new BaseResponseModel<BillingModel>();
-                Billings = new List<BillingModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
         }
@@ -387,13 +395,13 @@ namespace BillWare.App.Pages.Billing
                 }
                 catch (HttpRequestException ex)
                 {
-                    BaseResponse = new BaseResponseModel<BillingModel>();
+                    BaseResponse = new PaginationResult<BillingModel>();
                     Billings = new List<BillingModel>();
                     await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
                 }
                 catch (Exception ex)
                 {
-                    BaseResponse = new BaseResponseModel<BillingModel>();
+                    BaseResponse = new PaginationResult<BillingModel>();
                     Billings = new List<BillingModel>();
                     await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
                 }
@@ -402,7 +410,7 @@ namespace BillWare.App.Pages.Billing
         private async Task OpenEditDialogForm(BillingModel billing)
         {
             var dialogResponse = await DialogService.OpenAsync<BillingForm>("Editar Factura"
-                            , parameters: new Dictionary<string, object>() { { "BillingParameter", billing }, { "FormMode", Common.FormMode.EDIT } }
+                            , parameters: new Dictionary<string, object>() { { "BillingParameter", billing }, { "FormMode", Common.FormModeEnum.EDIT } }
                             , options: new DialogOptions
                             {
                                 Width = "1080px",
@@ -428,13 +436,13 @@ namespace BillWare.App.Pages.Billing
                 }
                 catch (HttpRequestException ex)
                 {
-                    BaseResponse = new BaseResponseModel<BillingModel>();
+                    BaseResponse = new PaginationResult<BillingModel>();
                     Billings = new List<BillingModel>();
                     await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
                 }
                 catch (Exception ex)
                 {
-                    BaseResponse = new BaseResponseModel<BillingModel>();
+                    BaseResponse = new PaginationResult<BillingModel>();
                     Billings = new List<BillingModel>();
                     await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
                 }

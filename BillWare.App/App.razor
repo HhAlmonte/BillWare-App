@@ -1,35 +1,34 @@
-﻿@using BillWare.App.Services;
+﻿@inject NavigationManager NavigationManager
+@inject BeamAuthenticationStateProviderHelper AuthenticationStateProvider
+@inject LocalStorageHelper LocalStorageService
 
-@inject TokenService tokenService
-@inject NavigationManager navigationManager
-
-
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
 
 @code {
+    private bool isUserAuthenticated = false;
+
     protected override async Task OnInitializedAsync()
     {
-        await CheckTokenAndNavigate();
-    }
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        isUserAuthenticated = authState.User.Identity.IsAuthenticated;
 
-    private async Task CheckTokenAndNavigate()
-    {
-        var token = await tokenService.GetTokenAsync();
-
-        if (string.IsNullOrEmpty(token))
+        if (!isUserAuthenticated)
         {
-            navigationManager.NavigateTo("/account/signin");
+            await LocalStorageService.Clear();
+            NavigationManager.NavigateTo("account/signin");
         }
     }
 }

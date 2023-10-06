@@ -1,4 +1,4 @@
-﻿@inject IAuthService _authService;
+﻿@inject IJWTAuthenticationStateProvider _authService;
 @inject IUserService _userService;
 @inject DialogService DialogService
 
@@ -74,7 +74,7 @@
         </div>
     </div>
     <div class="form-group text-center mt-3">
-        <RadzenButton Text="Aceptar" ButtonType="ButtonType.Submit" Style="background-color:#003053; color: #FFF" />
+        <RadzenButton Text="Aceptar" ButtonType="Radzen.ButtonType.Submit" Style="background-color:#003053; color: #FFF" />
     </div>
 </RadzenTemplateForm>
 

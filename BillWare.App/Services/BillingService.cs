@@ -1,4 +1,5 @@
-﻿using BillWare.App.Intefaces;
+﻿using BillWare.App.Common;
+using BillWare.App.Intefaces;
 using BillWare.App.Models;
 using BillWare.Application.Billing.Models;
 using System.Net.Http.Headers;
@@ -9,9 +10,9 @@ namespace BillWare.App.Services
     public class BillingService : IBillingService
     {
         private readonly HttpClient _httpClient;
-        private readonly LocalStorageService _localStorageService;
+        private readonly LocalStorageHelper _localStorageService;
 
-        public BillingService(HttpClient http, LocalStorageService localStorageService)
+        public BillingService(HttpClient http, LocalStorageHelper localStorageService)
         {
             _httpClient = http;
             _localStorageService = localStorageService;
@@ -37,10 +38,6 @@ namespace BillWare.App.Services
                 }
             }
             catch (HttpRequestException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
             {
                 throw ex;
             }
@@ -74,98 +71,67 @@ namespace BillWare.App.Services
             }
         }
 
-        public async Task<BaseResponseModel<BillingModel>> GetBilling(int pageIndex, int pageSize)
+        public async Task<PaginationResult<BillingModel>> GetBillings(int pageIndex, int pageSize)
         {
-            try
-            {
-                var token = await _localStorageService.GetItem(Configuration.TOKEN);
+            var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _httpClient.GetAsync($"Billing/GetBillingsPaged?pageIndex={pageIndex}&pageSize={pageSize}");
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<BaseResponseModel<BillingModel>>();
-                    return result;
-                }
-                else
-                {
-                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
-                }
-            }
-            catch (HttpRequestException ex)
+            var response = await _httpClient.GetAsync($"Billing/GetListPaged?pageIndex={pageIndex}&pageSize={pageSize}");
+
+            if (response.IsSuccessStatusCode)
             {
-                throw ex;
+                var result = await response.Content.ReadFromJsonAsync<PaginationResult<BillingModel>>();
+                return result;
             }
-            catch (Exception ex)
+            else
             {
-                throw ex;
+                throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
             }
         }
 
-        public async Task<BaseResponseModel<BillingModel>> GetBillingWithParams(BillingsParamsModel billingsParams)
+        public async Task<PaginationResult<BillingModel>> GetBillingsWithParams(BillingsParamsModel billingsParams)
         {
-            try
+            var token = await _localStorageService.GetItem(Configuration.TOKEN);
+
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var url = $"Billing/GetListPagedPagedWithParams?pageIndex={billingsParams.PageIndex}&pageSize={billingsParams.PageSize}";
+
+            if (billingsParams.InitialDate != null)
             {
-                var token = await _localStorageService.GetItem(Configuration.TOKEN);
-
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                var url = $"Billing/GetBillingsPagedWithParams?pageIndex={billingsParams.PageIndex}&pageSize={billingsParams.PageSize}";
-
-                if (billingsParams.InitialDate != null)
-                {
-                    url += $"&initialDate={billingsParams.InitialDate:MM/dd/yyyy}&finalDate={billingsParams.FinalDate:MM/dd/yyyy}";
-                }
-
-                var response = await _httpClient.GetAsync(url);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<BaseResponseModel<BillingModel>>();
-                    return result;
-                }
-                else
-                {
-                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
-                }
+                url += $"&initialDate={billingsParams.InitialDate:MM/dd/yyyy}&finalDate={billingsParams.FinalDate:MM/dd/yyyy}";
             }
-            catch (HttpRequestException ex)
+
+            var response = await _httpClient.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
             {
-                throw ex;
+                var result = await response.Content.ReadFromJsonAsync<PaginationResult<BillingModel>>();
+                return result;
             }
-            catch (Exception ex)
+            else
             {
-                throw ex;
+                throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
             }
         }
 
-        public async Task<BaseResponseModel<BillingModel>> GetBillingWithSearch(string search, int pageIndex, int pageSize)
+        public async Task<PaginationResult<BillingModel>> GetBillingsWithSearch(string search, int pageIndex, int pageSize)
         {
-            try
-            {
-                var token = await _localStorageService.GetItem(Configuration.TOKEN);
+            var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _httpClient.GetAsync($"Billing/GetBillingsPagedWithSearch?search={search}&pageIndex={pageIndex}&pageSize={pageSize}");
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<BaseResponseModel<BillingModel>>();
-                    return result;
-                }
-                else
-                {
-                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
-                }
-            }
-            catch (HttpRequestException ex)
+            var response = await _httpClient.GetAsync($"Billing/GetListPagedWithSearch?search={search}&pageIndex={pageIndex}&pageSize={pageSize}");
+
+            if (response.IsSuccessStatusCode)
             {
-                throw ex;
+                var result = await response.Content.ReadFromJsonAsync<PaginationResult<BillingModel>>();
+                return result;
             }
-            catch (Exception ex)
+            else
             {
-                throw ex;
+                throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
             }
         }
 

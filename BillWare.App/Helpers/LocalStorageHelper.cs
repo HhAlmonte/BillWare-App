@@ -1,12 +1,10 @@
 ﻿using Microsoft.JSInterop;
-using System;
-using System.Threading.Tasks;
 
-public class LocalStorageService
+public class LocalStorageHelper
 {
     private readonly IJSRuntime _jsRuntime;
 
-    public LocalStorageService(IJSRuntime jsRuntime)
+    public LocalStorageHelper(IJSRuntime jsRuntime)
     {
         _jsRuntime = jsRuntime;
     }
@@ -24,5 +22,10 @@ public class LocalStorageService
     public async Task RemoveItem(string key)
     {
         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", key);
+    }
+
+    public async Task Clear()
+    {
+        await _jsRuntime.InvokeVoidAsync("localStorage.clear");
     }
 }

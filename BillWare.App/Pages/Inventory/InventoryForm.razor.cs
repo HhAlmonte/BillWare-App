@@ -10,17 +10,17 @@ namespace BillWare.App.Pages.Inventory
     [Authorize(Roles = "Administrator, Operator")]
     public partial class InventoryForm
     {
-        [Parameter] public Common.FormMode FormMode { get; set; }
+        [Parameter] public Common.FormModeEnum FormMode { get; set; }
 
-        [Parameter] public Models.Inventory InventoryParameter { get; set; } = new Models.Inventory();
+        [Parameter] public Models.InventoryModel InventoryParameter { get; set; } = new Models.InventoryModel();
 
-        private Models.Inventory Inventory = new Models.Inventory();
+        private Models.InventoryModel Inventory = new Models.InventoryModel();
         private List<CategoryModel> Categories { get; set; } = new List<CategoryModel>();
-        private string ButtonTitle => FormMode == Common.FormMode.ADD ? "Agregar" : "Editar";
+        private string ButtonTitle => FormMode == Common.FormModeEnum.ADD ? "Agregar" : "Editar";
 
         private async Task OnSubmit()
         {
-            if (FormMode == Common.FormMode.ADD)
+            if (FormMode == Common.FormModeEnum.ADD)
             {
                 await Add();
             }
@@ -110,7 +110,7 @@ namespace BillWare.App.Pages.Inventory
         {
             await LoadCategories();
 
-            if (FormMode == Common.FormMode.EDIT)
+            if (FormMode == Common.FormModeEnum.EDIT)
             {
                 Inventory = InventoryParameter;
             }

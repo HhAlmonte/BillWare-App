@@ -1,4 +1,5 @@
-﻿using BillWare.App.Models;
+﻿using BillWare.App.Common;
+using BillWare.App.Models;
 using BillWare.Application.Billing.Models;
 
 namespace BillWare.App.Intefaces
@@ -8,9 +9,9 @@ namespace BillWare.App.Intefaces
         Task<BillingModel> CreateBilling(BillingModel model);
         Task<BillingModel> UpdateBilling(BillingModel model);
         Task<bool> DeleteBilling(int id);
-        Task<BaseResponseModel<BillingModel>> GetBillingWithSearch(string search, int pageIndex, int pageSize);
-        Task<BaseResponseModel<BillingModel>> GetBillingWithParams(BillingsParamsModel billingsParams);
-        Task<BaseResponseModel<BillingModel>> GetBilling(int pageIndex, int pageSize);
+        Task<PaginationResult<BillingModel>> GetBillingsWithSearch(string search, int pageIndex, int pageSize);
+        Task<PaginationResult<BillingModel>> GetBillingsWithParams(BillingsParamsModel billingsParams);
+        Task<PaginationResult<BillingModel>> GetBillings(int pageIndex, int pageSize);
         Task<int> GetLastInvoiceNumber();
     }
 }

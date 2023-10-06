@@ -1,6 +1,5 @@
 ﻿@page "/"
-
-@inject LocalStorageService _localStorageService;
+@inject LocalStorageHelper _localStorageService;
 @inject IBillingService _billingService;
 @inject IDashboardService _dashboardService;
 
@@ -36,6 +35,8 @@
         </RadzenChart>
     </div>
 </div>
+
+
 
 <h5 class="mb-2">Historial</h5>
 
@@ -115,14 +116,14 @@
                               Title="Estatus">
             <Template Context="status">
                 @{
-                    var statusName = (Common.BillingStatus)status.BillingStatus;
+                    var statusName = (Common.BillingStatusEnum)status.BillingStatus;
                 }
                 @switch (statusName)
                 {
-                    case Common.BillingStatus.Pagado:
+                    case Common.BillingStatusEnum.Pagado:
                         <RadzenBadge BadgeStyle="BadgeStyle.Success" Shade="Shade.Lighter" class="price-badge" Text="@statusName.ToString()" />
                         break;
-                    case Common.BillingStatus.Pendiente:
+                    case Common.BillingStatusEnum.Pendiente:
                         <RadzenBadge BadgeStyle="BadgeStyle.Danger" Shade="Shade.Lighter" class="price-badge" Text="@statusName.ToString()" />
                         break;
                 }
@@ -176,3 +177,14 @@
 @code {
     
 }
+
+<style>
+    .rz-steps-number{
+        background-color: #003053 !important;
+        color: #E0E0E0 !important;
+    }
+
+    .rz-steps-title{
+        color: #000 !important;
+    }
+</style>

@@ -10,7 +10,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: #888; /* Color del scroll */
+    background-color: #003053; /* Color del scroll */
     border-radius: 5px; /* Redondear las esquinas del scroll */
 }
 

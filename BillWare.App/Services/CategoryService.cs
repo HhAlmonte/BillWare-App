@@ -1,4 +1,5 @@
-﻿using BillWare.App.Intefaces;
+﻿using BillWare.App.Common;
+using BillWare.App.Intefaces;
 using BillWare.App.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Net.Http.Headers;
@@ -9,9 +10,9 @@ namespace BillWare.App.Services
     public class CategoryService : ICategoryService
     {
         private readonly HttpClient _httpClient;
-        private readonly LocalStorageService _localStorageService;
+        private readonly LocalStorageHelper _localStorageService;
 
-        public CategoryService(HttpClient httpClient, LocalStorageService localStorageService)
+        public CategoryService(HttpClient httpClient, LocalStorageHelper localStorageService)
         {
             _httpClient = httpClient;
             _localStorageService = localStorageService;
@@ -27,7 +28,7 @@ namespace BillWare.App.Services
 
                 var response = await _httpClient.PostAsJsonAsync("Category/CreateCategory", category);
 
-                if(response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadFromJsonAsync<CategoryModel>();
                     return result;
@@ -106,7 +107,7 @@ namespace BillWare.App.Services
             }
         }
 
-        public async Task<BaseResponseModel<CategoryModel>> GetCategoriesPaged(int pageIndex, int pageSize)
+        public async Task<PaginationResult<CategoryModel>> GetCategoriesPaged(int pageIndex, int pageSize)
         {
             try
             {
@@ -118,7 +119,7 @@ namespace BillWare.App.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<BaseResponseModel<CategoryModel>>();
+                    return await response.Content.ReadFromJsonAsync<PaginationResult<CategoryModel>>();
                 }
                 else
                 {
@@ -136,7 +137,7 @@ namespace BillWare.App.Services
 
         }
 
-        public async Task<BaseResponseModel<CategoryModel>> GetCategoriesPagedWithSearch(int pageIndex, int pageSize, string search)
+        public async Task<PaginationResult<CategoryModel>> GetCategoriesPagedWithSearch(int pageIndex, int pageSize, string search)
         {
             try
             {
@@ -148,7 +149,7 @@ namespace BillWare.App.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<BaseResponseModel<CategoryModel>>();
+                    return await response.Content.ReadFromJsonAsync<PaginationResult<CategoryModel>>();
                 }
                 else
                 {

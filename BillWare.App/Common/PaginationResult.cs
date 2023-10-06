@@ -1,6 +1,6 @@
-﻿namespace BillWare.App.Models
+﻿namespace BillWare.App.Common
 {
-    public class BaseResponseModel<T>
+    public class PaginationResult<T>
     {
         public List<T> Items { get; set; }
         public int TotalItems { get; set; }

@@ -12,54 +12,54 @@
 <RadzenTextBox Placeholder="Presiona ENTER al buscar" Change="@(async(e) => await GetWithSearch(e))" />
 
 <RadzenDataGrid Data="Inventories"
-                TItem="Inventory"
+                TItem="InventoryModel"
                 Responsive="true"
                 AllowColumnResize="true">
     <EmptyTemplate>
         <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">No records to display.</p>
     </EmptyTemplate>
     <Columns>
-        <RadzenDataGridColumn TItem="Inventory"
+        <RadzenDataGridColumn TItem="InventoryModel"
                               Title="Identificador">
             <Template Context="data">
                 @data.Id.ToString("D3")
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Inventory"
+        <RadzenDataGridColumn TItem="InventoryModel"
                               Property="Name"
                               Title="Nombre">
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Inventory"
+        <RadzenDataGridColumn TItem="InventoryModel"
                               Property="Description"
                               Title="Descripción">
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Inventory"
+        <RadzenDataGridColumn TItem="InventoryModel"
                               Property="Model"
                               Title="Marca">
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Inventory"
+        <RadzenDataGridColumn TItem="InventoryModel"
                               Title="Precio">
                 <Template Context="price">
                     @price.Price.ToString("C")
                 </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Inventory"
+        <RadzenDataGridColumn TItem="InventoryModel"
                               Title="Categoría"
                               Property="Category.Name">
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Inventory"
+        <RadzenDataGridColumn TItem="InventoryModel"
                               Property="Quantity"
                               Title="Cantidad"
                               TextAlign="TextAlign.Center">
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Inventory"
+        <RadzenDataGridColumn TItem="InventoryModel"
                               Title="Fecha de Creación"
                               Width="220px">
             <Template Context="date">
                 @date.CreatedAt.ToString("dd/MM/yyyy hh:mm")
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Inventory"
+        <RadzenDataGridColumn TItem="InventoryModel"
                               Title="Acciones"
                               Context="data"
                               Visible="IsAdmin"

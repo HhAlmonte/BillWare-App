@@ -3,8 +3,8 @@
     public static class Configuration
     {
         public const string APP_NAME = "Flor de Lis";
-        public const string BASE_API_URL = "http://www.billwareapi.somee.com/api/";
-        /*public const string BASE_API_URL = "https://localhost:7050/api/";*/
+        /*public const string BASE_API_URL = "http://www.billwareapi.somee.com/api/";*/
+        public const string BASE_API_URL = "https://localhost:44396/api/";
         public const string TOKEN = "token";
         public const string ROLE = "role";
     }

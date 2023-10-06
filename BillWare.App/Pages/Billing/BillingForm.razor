@@ -2,7 +2,7 @@
 @inject IBillingItemService _billingItemService;
 @inject ICostumerService _costumerService;
 @inject IInventoryService _inventoryService;
-@inject IBillingServiceService _billingServiceService;
+@inject IServicesService _billingServiceService;
 @inject DialogService DialogService;
 
 <RadzenTemplateForm Data="Billing" TItem="BillingModel" Submit="@(async() => await OnSubmit(1))">
@@ -66,7 +66,7 @@
                         @bind-Value="BillingInventoriesItems"
                         Change="@(() => OnDropDowmChange())"
                         Multiple="true"
-                        FilterOperator="StringFilterOperator.StartsWith"
+                        FilterOperator="Radzen.StringFilterOperator.StartsWith"
                         AllowFiltering="true"
                         Placeholder="Seleccione productos"
                         Style="width:250px"
@@ -78,7 +78,7 @@
                         @bind-Value="BillingServicesItems"
                         Change="@(() => OnDropDowmChange())"
                         Multiple="true"
-                        FilterOperator="StringFilterOperator.StartsWith"
+                        FilterOperator="Radzen.StringFilterOperator.StartsWith"
                         AllowFiltering="true"
                         Placeholder="Seleccione servicios"
                         Style="width:250px; margin-left:-11px;"
@@ -172,8 +172,8 @@
         </RadzenStack>
     </div>
     <div class="form-group text-center mt-3">
-        <RadzenButton Text="Solo guardar" ButtonType="ButtonType.Submit" Style="background-color:#003053; color: #FFF"/>
-        <RadzenButton Text="Guardar e imprimir" class="ml-3" ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Warning" Click="@(() => OnSubmit(2))" />
+        <RadzenButton Text="Solo guardar" ButtonType="Radzen.ButtonType.Submit" Style="background-color:#003053; color: #FFF" />
+        <RadzenButton Text="Guardar e imprimir" class="ml-3" ButtonType="Radzen.ButtonType.Button" ButtonStyle="ButtonStyle.Warning" Click="@(() => OnSubmit(2))" />
     </div>
 </RadzenTemplateForm>
 

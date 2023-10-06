@@ -1,4 +1,5 @@
-﻿using BillWare.App.Models;
+﻿using BillWare.App.Common;
+using BillWare.App.Models;
 using BillWare.Application.Billing.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
@@ -9,7 +10,7 @@ namespace BillWare.App.Pages.Dahsboard
     [Authorize(Roles = "Administrator")]
     public partial class Index
     {
-        private BaseResponseModel<BillingModel> BaseResponse { get; set; } = new BaseResponseModel<BillingModel>();
+        private PaginationResult<BillingModel> BaseResponse { get; set; } = new PaginationResult<BillingModel>();
         private BillingsParamsModel BillingsParamsModel { get; set; } = new BillingsParamsModel();
         private RadzenDataGrid<BillingItemModel> grid;
         private RadzenDataGrid<BillingDataGridDetails> gridDetails;
@@ -32,27 +33,8 @@ namespace BillWare.App.Pages.Dahsboard
 
         private async Task LoadData(int pageIndex, int pageSize = 5)
         {
-            try
-            {
-                BaseResponse = await _billingService.GetBilling(pageIndex, pageSize);
-                Billings = BaseResponse.Items;
-            }
-            catch (HttpRequestException ex)
-            {
-                BaseResponse = new BaseResponseModel<BillingModel>();
-                Billings = new List<BillingModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                BaseResponse = new BaseResponseModel<BillingModel>();
-                Billings = new List<BillingModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            finally
-            {
-                IsLoading = false;
-            }
+            BaseResponse = await _billingService.GetBillings(pageIndex, pageSize);
+            Billings = BaseResponse.Items;
         }
         private async Task GetWithSearch(string search)
         {
@@ -69,7 +51,7 @@ namespace BillWare.App.Pages.Dahsboard
             }
             else
             {
-                BaseResponse = await _billingService.GetBillingWithSearch(Search, PageIndex, PageSize);
+                BaseResponse = await _billingService.GetBillingsWithSearch(Search, PageIndex, PageSize);
                 Billings = BaseResponse.Items;
                 await LoadDataGridDetails();
                 StateHasChanged();
@@ -80,7 +62,7 @@ namespace BillWare.App.Pages.Dahsboard
             BillingsParamsModel.PageIndex = pageIndex;
             BillingsParamsModel.PageSize = pageSize;
 
-            BaseResponse = await _billingService.GetBillingWithParams(BillingsParamsModel);
+            BaseResponse = await _billingService.GetBillingsWithParams(BillingsParamsModel);
             Billings = BaseResponse.Items;
             BillingDataGridDetails.Clear();
             await LoadDataGridDetails();
@@ -88,39 +70,13 @@ namespace BillWare.App.Pages.Dahsboard
         }
         private async Task LoadSalesLast30Days()
         {
-            try
-            {
-                var salesData = await _dashboardService.GetSalesLast30Days();
-                SalesLast30Days = salesData;
-            }
-            catch (HttpRequestException ex)
-            {
-                SalesLast30Days = new List<StatisticsModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                SalesLast30Days = new List<StatisticsModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
+            var salesData = await _dashboardService.GetSalesLast30Days();
+            SalesLast30Days = salesData;
         }
         private async Task LoadSalesLast12Month()
         {
-            try
-            {
-                var salesData = await _dashboardService.GetSalesLast12Month();
-                SalesLast12Month = salesData;
-            }
-            catch (HttpRequestException ex)
-            {
-                SalesLast12Month = new List<StatisticsModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                SalesLast12Month = new List<StatisticsModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
+            var salesData = await _dashboardService.GetSalesLast12Month();
+            SalesLast12Month = salesData;
         }
 
         private async Task PageIndexChanged(int pageIndex)
@@ -158,6 +114,11 @@ namespace BillWare.App.Pages.Dahsboard
         }
         private async Task LoadDataGridDetails()
         {
+            if(Billings.Count == 0)
+            {
+                return;
+            }
+
             var totalAmount = Billings.Sum(x => x.TotalPriceWithTax);
 
             BillingDataGridDetails.Add(new BillingDataGridDetails
@@ -187,13 +148,26 @@ namespace BillWare.App.Pages.Dahsboard
         {
             IsLoading = true;
 
-            await LoadData(PageIndex);
-            await LoadSalesLast30Days();
-            await LoadSalesLast12Month();
-            await LoadDataGridDetails();
+            try
+            {
+                var loadDataTask = LoadData(PageIndex);
+                var loadSalesLast30DaysTask = LoadSalesLast30Days();
+                var loadSalesLast12MonthTask = LoadSalesLast12Month();
+                var loadDataGridDetailsTask = LoadDataGridDetails();
 
-            await Task.Delay(1000);
-            IsLoading = false;
+                await Task.WhenAll(loadDataTask, loadSalesLast30DaysTask, loadSalesLast12MonthTask, loadDataGridDetailsTask);
+
+                IsLoading = false;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await SweetAlertServices.ShowErrorAlert("Ha ocurrido un error",ex.Message);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
     }
 }

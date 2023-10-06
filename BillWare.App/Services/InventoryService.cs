@@ -1,4 +1,5 @@
-﻿using BillWare.App.Intefaces;
+﻿using BillWare.App.Common;
+using BillWare.App.Intefaces;
 using BillWare.App.Models;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -8,15 +9,15 @@ namespace BillWare.App.Services
     public class InventoryService : IInventoryService
     {
         private readonly HttpClient _httpClient;
-        private readonly LocalStorageService _localStorageService;
+        private readonly LocalStorageHelper _localStorageService;
 
-        public InventoryService(HttpClient httpClient, LocalStorageService localStorageService)
+        public InventoryService(HttpClient httpClient, LocalStorageHelper localStorageService)
         {
             _httpClient = httpClient;
             _localStorageService = localStorageService;
         }
 
-        public async Task<Inventory> CreateInvetory(Inventory inventory)
+        public async Task<InventoryModel> CreateInvetory(InventoryModel inventory)
         {
             try
             {
@@ -26,9 +27,9 @@ namespace BillWare.App.Services
 
                 var response = await _httpClient.PostAsJsonAsync("Inventory/CreateInventory", inventory);
 
-                if(response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<Inventory>();
+                    var result = await response.Content.ReadFromJsonAsync<InventoryModel>();
                     return result;
                 }
                 else
@@ -65,7 +66,7 @@ namespace BillWare.App.Services
                 {
                     throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
                 }
-                
+
             }
             catch (HttpRequestException ex)
             {
@@ -77,7 +78,7 @@ namespace BillWare.App.Services
             }
         }
 
-        public async Task<Inventory> EditInventory(Inventory inventory)
+        public async Task<InventoryModel> EditInventory(InventoryModel inventory)
         {
             try
             {
@@ -89,7 +90,7 @@ namespace BillWare.App.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<Inventory>();
+                    var result = await response.Content.ReadFromJsonAsync<InventoryModel>();
                     return result;
                 }
                 else
@@ -107,7 +108,7 @@ namespace BillWare.App.Services
             }
         }
 
-        public async Task<BaseResponseModel<Inventory>> GetInventories(int pageIndex, int pageSize)
+        public async Task<PaginationResult<InventoryModel>> GetInventories(int pageIndex, int pageSize)
         {
             try
             {
@@ -117,9 +118,9 @@ namespace BillWare.App.Services
 
                 var response = await _httpClient.GetAsync($"Inventory/GetInventoriesPaged?pageIndex={pageIndex}&pageSize={pageSize}");
 
-                if(response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<BaseResponseModel<Inventory>>();
+                    var result = await response.Content.ReadFromJsonAsync<PaginationResult<InventoryModel>>();
                     return result;
                 }
                 else
@@ -137,7 +138,7 @@ namespace BillWare.App.Services
             }
         }
 
-        public async Task<BaseResponseModel<Inventory>> GetInventoryWithSearch(string search, int pageIndex, int pageSize)
+        public async Task<PaginationResult<InventoryModel>> GetInventoryWithSearch(string search, int pageIndex, int pageSize)
         {
             try
             {
@@ -146,10 +147,10 @@ namespace BillWare.App.Services
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
                 var response = await _httpClient.GetAsync($"Inventory/GetInventoryWithSearch?search={search}&pageIndex={pageIndex}&pageSize={pageSize}");
-                
-                if(response.IsSuccessStatusCode)
+
+                if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<BaseResponseModel<Inventory>>();
+                    var result = await response.Content.ReadFromJsonAsync<PaginationResult<InventoryModel>>();
                     return result;
                 }
                 else

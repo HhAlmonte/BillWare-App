@@ -1,8 +1,5 @@
 ﻿@page "/costumer/index"
 
-@inject ICostumerService _costumerService;
-@inject DialogService DialogService;
-
 <h3>Cliente</h3>
 
 <hr />
@@ -11,60 +8,60 @@
 <RadzenTextBox Placeholder="Presiona ENTER al buscar" Change="@(async(e) => await GetWithSearch(e))" />
 
 <RadzenDataGrid Data="Costumers"
-                TItem="Costumer"
+                TItem="CostumerModel"
                 Responsive="true"
                 AllowColumnResize="true">
     <EmptyTemplate>
         <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">No records to display.</p>
     </EmptyTemplate>
     <Columns>
-        <RadzenDataGridColumn TItem="Costumer"
+        <RadzenDataGridColumn TItem="CostumerModel"
                               Title="Identificador">
             <Template Context="data">
                 @data.Id.ToString("D3")
             </Template>
         </RadzenDataGridColumn>
 
-        <RadzenDataGridColumn TItem="Costumer"
+        <RadzenDataGridColumn TItem="CostumerModel"
                               Title="Cédula"
                               Property="NumberId">
         </RadzenDataGridColumn>
 
-        <RadzenDataGridColumn TItem="Costumer"
+        <RadzenDataGridColumn TItem="CostumerModel"
                               Property="FullName"
                               Title="Nombre Completo">
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Costumer"
+        <RadzenDataGridColumn TItem="CostumerModel"
                               Property="Phone"
                               Title="Teléfono">
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Costumer"
+        <RadzenDataGridColumn TItem="CostumerModel"
                               Property="Address"
                               Title="Dirección">
         </RadzenDataGridColumn>
         
-        <RadzenDataGridColumn TItem="Costumer"
+        <RadzenDataGridColumn TItem="CostumerModel"
                               Title="Fecha de Creación"
                               Width="220px">
             <Template Context="date">
                 @date.CreatedAt.ToString("dd/MM/yyyy hh:mm")
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Costumer"
+        <RadzenDataGridColumn TItem="CostumerModel"
                               Title="Acciones"
                               Context="data"
                               Visible="IsAdmin"
                               TextAlign="TextAlign.Center">
             <Template>
                 <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Click="@(async() => await OpenEditDialogForm("Editar inventario", data))" />
-                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await Delete(data.Id))" />
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await DeleteCostumer(data.Id))" />
             </Template>
         </RadzenDataGridColumn>
     </Columns>
 </RadzenDataGrid>
 
-<RadzenPager PageSize="BaseResponse.PageSize"
-             Count="BaseResponse.TotalItems"
+<RadzenPager PageSize="PaginationResult.PageSize"
+             Count="PaginationResult.TotalItems"
              PageChanged="@(async(e) => await PageIndexChanged(e.PageIndex))"
              PageSizeOptions="PageSizeOptions"
              PageSizeText="registros por página"
@@ -78,8 +75,4 @@
 @if (IsLoading)
 {
     <LoadingOverlay />
-}
-
-@code {
-    
 }

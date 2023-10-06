@@ -1,5 +1,5 @@
-﻿using BillWare.App.Models;
-using BillWare.Application.Billing.Models;
+﻿using BillWare.App.Common;
+using BillWare.App.Models;
 using Microsoft.AspNetCore.Authorization;
 using Radzen;
 
@@ -8,7 +8,7 @@ namespace BillWare.App.Pages.User
     [Authorize("Administrator")]
     public partial class Index
     {
-        private BaseResponseModel<UserModel> BaseResponse = new BaseResponseModel<UserModel>();
+        private PaginationResult<UserModel> BaseResponse = new PaginationResult<UserModel>();
         private List<UserModel> Users = new List<UserModel>();
 
         private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
@@ -42,7 +42,7 @@ namespace BillWare.App.Pages.User
         private async Task OpenEditDialogForm(UserModel user)
         {
             var action = await DialogService.OpenAsync<UserForm>("Editar usuario",
-            parameters: new Dictionary<string, object>() { { "UserParameter", user }, { "FormMode", Common.FormMode.EDIT } },
+            parameters: new Dictionary<string, object>() { { "UserParameter", user }, { "FormMode", Common.FormModeEnum.EDIT } },
             options: new DialogOptions
             {
                 Width = "700px",
@@ -72,13 +72,13 @@ namespace BillWare.App.Pages.User
             }
             catch (HttpRequestException ex)
             {
-                BaseResponse = new BaseResponseModel<UserModel>();
+                BaseResponse = new PaginationResult<UserModel>();
                 Users = new List<UserModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }
             catch (Exception ex)
             {
-                BaseResponse = new BaseResponseModel<UserModel>();
+                BaseResponse = new PaginationResult<UserModel>();
                 Users = new List<UserModel>();
                 await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
             }

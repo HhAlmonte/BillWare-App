@@ -7,17 +7,17 @@ namespace BillWare.App.Pages.BillingService
     [Authorize(Roles = "Administrator, Operator")]
     public partial class BillingServiceForm
     {
-        [Parameter] public Common.FormMode FormMode { get; set; }
+        [Parameter] public Common.FormModeEnum FormMode { get; set; }
 
         [Parameter] public BillingServiceModel BillingServiceParameter { get; set; } = new BillingServiceModel();
 
         private BillingServiceModel BillingService = new BillingServiceModel();
 
-        private string ButtonTitle => FormMode == Common.FormMode.ADD ? "Agregar" : "Editar";
+        private string ButtonTitle => FormMode == Common.FormModeEnum.ADD ? "Agregar" : "Editar";
 
         private async Task OnSubmit()
         {
-            if (FormMode == Common.FormMode.ADD)
+            if (FormMode == Common.FormModeEnum.ADD)
             {
                 await Add();
             }
@@ -69,7 +69,7 @@ namespace BillWare.App.Pages.BillingService
 
         protected override void OnInitialized()
         {
-            if (FormMode == Common.FormMode.EDIT)
+            if (FormMode == Common.FormModeEnum.EDIT)
             {
                 BillingService = BillingServiceParameter;
             }

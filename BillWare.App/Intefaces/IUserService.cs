@@ -1,13 +1,16 @@
-﻿using BillWare.App.Models;
+﻿using BillWare.App.Common;
+using BillWare.App.Models;
 
 namespace BillWare.App.Intefaces
 {
     public interface IUserService
     {
-        Task<BaseResponseModel<UserModel>> GetUsersPaged(int pageIndex, int pageSize);
+        Task<PaginationResult<UserModel>> GetUsersPaged(int pageIndex, int pageSize);
 
         Task<UserModel> UpdateUser(UserModel user);
 
-        Task <bool> DeleteUser(string id);
+        Task<UserAuthResponse> GetCurrentUser();
+
+        Task<bool> DeleteUser(string id);
     }
 }
