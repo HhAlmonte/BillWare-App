@@ -35,7 +35,7 @@ namespace BillWare.App.Services
                     return new BaseResponse<T>
                     {
                         IsSuccessFul = true,
-                        Data = result
+                        Data = result ?? new BaseResponse<T>().Data
                     };
                 }
                 else

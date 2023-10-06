@@ -1,4 +1,5 @@
 ﻿using BillWare.App.Common;
+using BillWare.App.Enum;
 using BillWare.App.Models;
 using Microsoft.AspNetCore.Authorization;
 using Radzen;
@@ -42,7 +43,7 @@ namespace BillWare.App.Pages.User
         private async Task OpenEditDialogForm(UserModel user)
         {
             var action = await DialogService.OpenAsync<UserForm>("Editar usuario",
-            parameters: new Dictionary<string, object>() { { "UserParameter", user }, { "FormMode", Common.FormModeEnum.EDIT } },
+            parameters: new Dictionary<string, object>() { { "UserParameter", user }, { "FormMode", FormModeEnum.EDIT } },
             options: new DialogOptions
             {
                 Width = "700px",

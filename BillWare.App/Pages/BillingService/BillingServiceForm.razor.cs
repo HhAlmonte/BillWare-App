@@ -1,4 +1,5 @@
-﻿using BillWare.App.Models;
+﻿using BillWare.App.Enum;
+using BillWare.App.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 
@@ -7,17 +8,17 @@ namespace BillWare.App.Pages.BillingService
     [Authorize(Roles = "Administrator, Operator")]
     public partial class BillingServiceForm
     {
-        [Parameter] public Common.FormModeEnum FormMode { get; set; }
+        [Parameter] public FormModeEnum FormMode { get; set; }
 
         [Parameter] public BillingServiceModel BillingServiceParameter { get; set; } = new BillingServiceModel();
 
         private BillingServiceModel BillingService = new BillingServiceModel();
 
-        private string ButtonTitle => FormMode == Common.FormModeEnum.ADD ? "Agregar" : "Editar";
+        private string ButtonTitle => FormMode == FormModeEnum.ADD ? "Agregar" : "Editar";
 
         private async Task OnSubmit()
         {
-            if (FormMode == Common.FormModeEnum.ADD)
+            if (FormMode == FormModeEnum.ADD)
             {
                 await Add();
             }
@@ -69,7 +70,7 @@ namespace BillWare.App.Pages.BillingService
 
         protected override void OnInitialized()
         {
-            if (FormMode == Common.FormModeEnum.EDIT)
+            if (FormMode == FormModeEnum.EDIT)
             {
                 BillingService = BillingServiceParameter;
             }

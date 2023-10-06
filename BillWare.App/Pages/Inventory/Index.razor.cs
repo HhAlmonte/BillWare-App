@@ -1,4 +1,5 @@
 ﻿using BillWare.App.Common;
+using BillWare.App.Enum;
 using BillWare.Application.Billing.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
@@ -145,7 +146,7 @@ namespace BillWare.App.Pages.Inventory
             var dialogResponse = await DialogService.OpenAsync<InventoryForm>(title,
             new Dictionary<string, object>
                 {
-                    { "FormMode", Common.FormModeEnum.ADD }
+                    { "FormMode", FormModeEnum.ADD }
                 },
             new DialogOptions
                 {
@@ -169,7 +170,7 @@ namespace BillWare.App.Pages.Inventory
             var action = await DialogService.OpenAsync<InventoryForm>(title,
             new Dictionary<string, object>
                 {
-                    { "FormMode", Common.FormModeEnum.EDIT },
+                    { "FormMode", FormModeEnum.EDIT },
                     { "InventoryParameter", inventory }
                 },
             new DialogOptions

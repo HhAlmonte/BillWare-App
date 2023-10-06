@@ -1,26 +1,24 @@
-﻿using BillWare.App.Models;
-using BillWare.Application.Billing.Models;
+﻿using BillWare.App.Enum;
+using BillWare.App.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
-using System;
-using static System.Collections.Specialized.BitVector32;
 
 namespace BillWare.App.Pages.Inventory
 {
     [Authorize(Roles = "Administrator, Operator")]
     public partial class InventoryForm
     {
-        [Parameter] public Common.FormModeEnum FormMode { get; set; }
+        [Parameter] public FormModeEnum FormMode { get; set; }
 
         [Parameter] public Models.InventoryModel InventoryParameter { get; set; } = new Models.InventoryModel();
 
         private Models.InventoryModel Inventory = new Models.InventoryModel();
         private List<CategoryModel> Categories { get; set; } = new List<CategoryModel>();
-        private string ButtonTitle => FormMode == Common.FormModeEnum.ADD ? "Agregar" : "Editar";
+        private string ButtonTitle => FormMode == FormModeEnum.ADD ? "Agregar" : "Editar";
 
         private async Task OnSubmit()
         {
-            if (FormMode == Common.FormModeEnum.ADD)
+            if (FormMode == FormModeEnum.ADD)
             {
                 await Add();
             }
@@ -110,7 +108,7 @@ namespace BillWare.App.Pages.Inventory
         {
             await LoadCategories();
 
-            if (FormMode == Common.FormModeEnum.EDIT)
+            if (FormMode == FormModeEnum.EDIT)
             {
                 Inventory = InventoryParameter;
             }

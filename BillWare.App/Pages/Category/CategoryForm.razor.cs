@@ -1,4 +1,5 @@
-﻿using BillWare.App.Models;
+﻿using BillWare.App.Enum;
+using BillWare.App.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using System;
@@ -8,17 +9,17 @@ namespace BillWare.App.Pages.Category
     [Authorize("Administrator, Operator")]
     public partial class CategoryForm
     {
-        [Parameter] public Common.FormModeEnum FormMode { get; set; }
+        [Parameter] public FormModeEnum FormMode { get; set; }
         [Parameter] public CategoryModel CategoryParameter { get; set; } = new CategoryModel();
 
 
         private CategoryModel Category = new CategoryModel();
 
-        private string ButtonTitle => FormMode == Common.FormModeEnum.ADD ? "Agregar" : "Editar";
+        private string ButtonTitle => FormMode == FormModeEnum.ADD ? "Agregar" : "Editar";
 
         private async Task OnSubmit()
         {
-            if (FormMode == Common.FormModeEnum.ADD)
+            if (FormMode == FormModeEnum.ADD)
             {
                 await Add();
             }
@@ -70,7 +71,7 @@ namespace BillWare.App.Pages.Category
 
         protected override void OnInitialized()
         {
-            if (FormMode == Common.FormModeEnum.EDIT)
+            if (FormMode == FormModeEnum.EDIT)
             {
                 Category = CategoryParameter;
             }

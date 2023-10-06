@@ -1,4 +1,5 @@
 ﻿using BillWare.App.Common;
+using BillWare.App.Enum;
 using BillWare.App.Models;
 using Microsoft.AspNetCore.Components;
 using Radzen;
@@ -27,7 +28,7 @@ namespace BillWare.App.Pages.BillingService
             var action = await DialogService.OpenAsync<BillingServiceForm>(title,
             new Dictionary<string, object>
                     {
-            { "FormMode", Common.FormModeEnum.ADD }
+            { "FormMode", FormModeEnum.ADD }
                     },
             new DialogOptions
             {
@@ -50,7 +51,7 @@ namespace BillWare.App.Pages.BillingService
             var action = await DialogService.OpenAsync<BillingServiceForm>(title,
             new Dictionary<string, object>
                             {
-                    { "FormMode", Common.FormModeEnum.EDIT },
+                    { "FormMode", FormModeEnum.EDIT },
                     { "BillingServiceParameter", billingService }
                             },
             new DialogOptions

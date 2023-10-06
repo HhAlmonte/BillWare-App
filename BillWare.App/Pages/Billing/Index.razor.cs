@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components;
 using BillWare.App.Services;
 using BillWare.App.Enum;
 using BillWare.App.Common;
+using BillWare.App.Helpers;
 
 namespace BillWare.App.Pages.Billing
 {
@@ -170,7 +171,7 @@ namespace BillWare.App.Pages.Billing
 
         private async Task PrintInvoice(BillingModel billing)
         {
-            billing.BillingStatus = (int)Common.BillingStatusEnum.Pagado;
+            billing.BillingStatus = (int)BillingStatus.Pagado;
 
             try
             {
@@ -410,7 +411,7 @@ namespace BillWare.App.Pages.Billing
         private async Task OpenEditDialogForm(BillingModel billing)
         {
             var dialogResponse = await DialogService.OpenAsync<BillingForm>("Editar Factura"
-                            , parameters: new Dictionary<string, object>() { { "BillingParameter", billing }, { "FormMode", Common.FormModeEnum.EDIT } }
+                            , parameters: new Dictionary<string, object>() { { "BillingParameter", billing }, { "FormMode", FormModeEnum.EDIT } }
                             , options: new DialogOptions
                             {
                                 Width = "1080px",

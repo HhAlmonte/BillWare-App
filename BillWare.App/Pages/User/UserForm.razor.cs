@@ -1,4 +1,5 @@
-﻿using BillWare.App.Models;
+﻿using BillWare.App.Enum;
+using BillWare.App.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 
@@ -8,7 +9,7 @@ namespace BillWare.App.Pages.User
     public partial class UserForm
     {
         [Parameter] public UserModel UserParameter { get; set; } = new UserModel();
-        [Parameter] public Common.FormModeEnum FormMode { get; set; } = Common.FormModeEnum.ADD;
+        [Parameter] public FormModeEnum FormMode { get; set; } = FormModeEnum.ADD;
 
         public bool ShowPasswordInput { get; set; } = true;
 
@@ -22,7 +23,7 @@ namespace BillWare.App.Pages.User
 
         private async Task OnSubmit()
         {
-            if (FormMode == Common.FormModeEnum.ADD)
+            if (FormMode == FormModeEnum.ADD)
             {
                 await Add();
             }
@@ -80,7 +81,7 @@ namespace BillWare.App.Pages.User
 
         protected override void OnInitialized()
         {
-            if (FormMode == Common.FormModeEnum.EDIT)
+            if (FormMode == FormModeEnum.EDIT)
             {
                 ShowPasswordInput = false;
 

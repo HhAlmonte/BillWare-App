@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using BillWare.App.Enum;
 @inject LocalStorageHelper _localStorageService;
 @inject IBillingService _billingService;
 @inject IDashboardService _dashboardService;
@@ -116,14 +117,14 @@
                               Title="Estatus">
             <Template Context="status">
                 @{
-                    var statusName = (Common.BillingStatusEnum)status.BillingStatus;
+                    var statusName = (BillingStatus)status.BillingStatus;
                 }
                 @switch (statusName)
                 {
-                    case Common.BillingStatusEnum.Pagado:
+                    case BillingStatus.Pagado:
                         <RadzenBadge BadgeStyle="BadgeStyle.Success" Shade="Shade.Lighter" class="price-badge" Text="@statusName.ToString()" />
                         break;
-                    case Common.BillingStatusEnum.Pendiente:
+                    case BillingStatus.Pendiente:
                         <RadzenBadge BadgeStyle="BadgeStyle.Danger" Shade="Shade.Lighter" class="price-badge" Text="@statusName.ToString()" />
                         break;
                 }

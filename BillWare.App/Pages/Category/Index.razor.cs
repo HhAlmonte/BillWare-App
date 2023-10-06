@@ -1,4 +1,5 @@
 ﻿using BillWare.App.Common;
+using BillWare.App.Enum;
 using BillWare.App.Models;
 using BillWare.Application.Billing.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -33,7 +34,7 @@ namespace BillWare.App.Pages.Category
             var action = await DialogService.OpenAsync<CategoryForm>(title,
             new Dictionary<string, object>
             {
-            { "FormMode", Common.FormModeEnum.ADD }
+            { "FormMode", FormModeEnum.ADD }
             },
             new DialogOptions
             {
@@ -57,7 +58,7 @@ namespace BillWare.App.Pages.Category
             var action = await DialogService.OpenAsync<CategoryForm>(title,
             new Dictionary<string, object>
                         {
-                    { "FormMode", Common.FormModeEnum.EDIT },
+                    { "FormMode", FormModeEnum.EDIT },
                     { "CategoryParameter", category }
                         },
             new DialogOptions

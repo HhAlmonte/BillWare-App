@@ -5,6 +5,7 @@ using Radzen.Blazor;
 using Radzen;
 using Microsoft.AspNetCore.Authorization;
 using BillWare.App.Helpers;
+using BillWare.App.Enum;
 
 namespace BillWare.App.Pages.Billing
 {
@@ -12,7 +13,7 @@ namespace BillWare.App.Pages.Billing
     public partial class BillingForm
     {
         [Parameter] public BillingModel BillingParameter { get; set; } = new BillingModel();
-        [Parameter] public Common.FormModeEnum FormMode { get; set; } = Common.FormModeEnum.ADD;
+        [Parameter] public FormModeEnum FormMode { get; set; } = FormModeEnum.ADD;
         [Inject] private LocalStorageHelper LocalStorageService { get; set; }
 
         private BillingModel Billing = new BillingModel()
@@ -20,7 +21,7 @@ namespace BillWare.App.Pages.Billing
             CreatedAt = DateTime.Now
         };
         private RadzenDataGrid<BillingItemModel> grid;
-        private InvoiceNumberGenerator InvoiceNumberGenerator = new Common.InvoiceNumberGenerator("FACT");
+        private InvoiceNumberGenerator InvoiceNumberGenerator = new InvoiceNumberGenerator("FACT");
 
         private List<PaymentMethod> PaymentMethods { get; set; } = new List<PaymentMethod>
         {
@@ -121,12 +122,12 @@ namespace BillWare.App.Pages.Billing
             {
                 int costumerId = Convert.ToInt32(CostumerId);
 
-                var costumer = await _costumerService.GetCostumerById(costumerId);
+                var costumer = await _costumerService.GetEntityById(costumerId);
 
-                Billing.FullName = costumer.FullName;
-                Billing.Address = costumer.Address;
-                Billing.Phone = costumer.Phone;
-                Billing.NumberId = costumer.NumberId;
+                Billing.FullName = costumer.Data.FullName;
+                Billing.Address = costumer.Data.Address;
+                Billing.Phone = costumer.Data.Phone;
+                Billing.NumberId = costumer.Data.NumberId;
             }
             catch (Exception ex)
             {
@@ -172,7 +173,7 @@ namespace BillWare.App.Pages.Billing
 
         private async Task DeleteBillingItem(BillingItemModel billingItem)
         {
-            if (FormMode == Common.FormModeEnum.EDIT)
+            if (FormMode == FormModeEnum.EDIT)
             {
                 await _billingItemService.DeleteBillingItem(billingItem.Id);
             }
@@ -305,7 +306,7 @@ namespace BillWare.App.Pages.Billing
         {
             Billing.BillingItems = BillingItems;
 
-            if (FormMode == Common.FormModeEnum.ADD)
+            if (FormMode == FormModeEnum.ADD)
             {
                 await Add(billingStatus);
             }
@@ -323,7 +324,7 @@ namespace BillWare.App.Pages.Billing
 
             await LoadBillingsService();
 
-            if (FormMode == Common.FormModeEnum.EDIT)
+            if (FormMode == FormModeEnum.EDIT)
             {
                 Billing = BillingParameter;
 

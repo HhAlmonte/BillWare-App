@@ -1,4 +1,5 @@
-﻿using BillWare.App.Helpers;
+﻿using BillWare.App.Common;
+using BillWare.App.Helpers;
 using BillWare.App.Intefaces;
 using BillWare.App.Models;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -30,26 +31,26 @@ namespace BillWare.App.Services
             return AuthenticationStateProviderHelper.BuildAuthenticationState(token);
         }
 
-        public async Task<LoginResponse> LoginAsync(LoginModel loginModel)
+        public async Task<BaseResponse<LoginResponse>> LoginAsync(LoginModel loginModel)
         {
             var request = await _httpClient.PostAsJsonAsync("Account/login", loginModel);
 
+            if (!request.IsSuccessStatusCode)
+            {
+                var errorResponse = await request.Content.ReadFromJsonAsync<BaseResponse<LoginResponse>>();
+
+                return BaseResponse<LoginResponse>.BuildErrorResponse(errorResponse!);
+            }
+
             var response = await request.Content.ReadFromJsonAsync<LoginResponse>();
 
-            await _localStorageService.SetItem(Configuration.TOKEN, response.Token);
+            await _localStorageService.SetItem(Configuration.TOKEN, response!.Token);
 
             var authState = AuthenticationStateProviderHelper.BuildAuthenticationState(response.Token);
 
             NotifyAuthenticationStateChanged(Task.FromResult(authState));
 
-            return response;
-        }
-
-        public async Task LogOut()
-        {
-            _httpClient.DefaultRequestHeaders.Authorization = null;
-            await _localStorageService.RemoveItem(Configuration.TOKEN);
-            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()))));
+            return BaseResponse<LoginResponse>.BuildSuccessResponse(response);
         }
 
         public async Task<HttpResponseMessage> RegisterAsync(RegistrationModel request)
@@ -57,6 +58,15 @@ namespace BillWare.App.Services
             var response = await _httpClient.PostAsJsonAsync("Account/register", request);
 
             return response;
+        }
+
+        public async Task LogOut()
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = null;
+
+            await _localStorageService.RemoveItem(Configuration.TOKEN);
+
+            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()))));
         }
     }
 }

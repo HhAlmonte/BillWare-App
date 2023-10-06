@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using BillWare.App.Enum;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using System;
 
@@ -7,16 +8,16 @@ namespace BillWare.App.Pages.Costumer
     [Authorize("Administrator, Operator")]
     public partial class CostumerForm
     {
-        [Parameter] public Common.FormModeEnum FormMode { get; set; }
+        [Parameter] public FormModeEnum FormMode { get; set; }
 
         [Parameter] public Models.CostumerModel CostumerParameter { get; set; } = new Models.CostumerModel();
 
         private Models.CostumerModel Costumer = new Models.CostumerModel();
-        private string ButtonTitle => FormMode == Common.FormModeEnum.ADD ? "Agregar" : "Editar";
+        private string ButtonTitle => FormMode == FormModeEnum.ADD ? "Agregar" : "Editar";
 
         private async Task OnSubmit()
         {
-            if (FormMode == Common.FormModeEnum.ADD)
+            if (FormMode == FormModeEnum.ADD)
             {
                 await Add();
             }
@@ -30,7 +31,7 @@ namespace BillWare.App.Pages.Costumer
         {
             try
             {
-                var response = await _costumerService.CreateCostumer(Costumer);
+                var response = await _costumerService.CreateAsync(Costumer);
 
                 var closeReturn = response != null ? true : false;
 
@@ -46,7 +47,7 @@ namespace BillWare.App.Pages.Costumer
         {
             try
             {
-                var response = await _costumerService.EditCostumer(Costumer);
+                var response = await _costumerService.UpdateAsync(Costumer);
 
                 var closeReturn = response != null ? true : false;
 
@@ -60,7 +61,7 @@ namespace BillWare.App.Pages.Costumer
 
         protected override void OnInitialized()
         {
-            if (FormMode == Common.FormModeEnum.EDIT)
+            if (FormMode == FormModeEnum.EDIT)
             {
                 Costumer = CostumerParameter;
             }
