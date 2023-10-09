@@ -26,30 +26,18 @@ namespace BillWare.App.Services
 
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.PostAsJsonAsync($"{_controllerName}/Create", entity);
+                var request = await _httpClient.PostAsJsonAsync($"{_controllerName}/Create", entity);
 
-                if (response.IsSuccessStatusCode)
+                if (!request.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<T>();
+                    var errorResponse = await request.Content.ReadFromJsonAsync<BaseResponse<T>>();
 
-                    return new BaseResponse<T>
-                    {
-                        IsSuccessFul = true,
-                        Data = result ?? new BaseResponse<T>().Data
-                    };
+                    return BaseResponse<T>.BuildErrorResponse(errorResponse!);
                 }
-                else
-                {
-                    var result = await response.Content.ReadFromJsonAsync<BaseResponse<T>>();
 
-                    return new BaseResponse<T>
-                    {
-                        IsSuccessFul = false,
-                        Message = result!.Message,
-                        StatusCode = result!.StatusCode,
-                        Details = result.Details
-                    };
-                }
+                var response = await request.Content.ReadFromJsonAsync<T>();
+
+                return BaseResponse<T>.BuildSuccessResponse(response!);
             }
             catch (HttpRequestException ex)
             {
@@ -67,28 +55,16 @@ namespace BillWare.App.Services
 
                 var response = await _httpClient.DeleteAsync($"{_controllerName}/Delete/id={identity}");
 
-                if (response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<T>();
+                    var errorResponse = await response.Content.ReadFromJsonAsync<BaseResponse<T>>();
 
-                    return new BaseResponse<T>
-                    {
-                        IsSuccessFul = true,
-                        Data = result
-                    };
+                    return BaseResponse<T>.BuildErrorResponse(errorResponse!);
                 }
-                else
-                {
-                    var result = await response.Content.ReadFromJsonAsync<BaseResponse<T>>();
 
-                    return new BaseResponse<T>
-                    {
-                        IsSuccessFul = false,
-                        Message = result!.Message,
-                        StatusCode = result!.StatusCode,
-                        Details = result.Details
-                    };
-                }
+                var result = await response.Content.ReadFromJsonAsync<BaseResponse<T>>();
+
+                return BaseResponse<T>.BuildSuccessResponse(result!.Data!);
             }
             catch (HttpRequestException ex)
             {
@@ -102,29 +78,18 @@ namespace BillWare.App.Services
 
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            var response = await _httpClient.GetAsync($"{_controllerName}/GetListPaged?pageIndex={pageIndex}&pageSize={pageSize}");
+            var request = await _httpClient.GetAsync($"{_controllerName}/GetListPaged?pageIndex={pageIndex}&pageSize={pageSize}");
 
-            if (response.IsSuccessStatusCode)
+            if (!request.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<PaginationResult<T>>();
-                return new BaseResponse<PaginationResult<T>>
-                {
-                    IsSuccessFul = true,
-                    Data = result
-                };
-            }
-            else
-            {
-                var result = await response.Content.ReadFromJsonAsync<BaseResponse<PaginationResult<T>>>();
+                var errorResponse = await request.Content.ReadFromJsonAsync<BaseResponse<PaginationResult<T>>>();
 
-                return new BaseResponse<PaginationResult<T>>
-                {
-                    IsSuccessFul = false,
-                    Message = result!.Message,
-                    StatusCode = result!.StatusCode,
-                    Details = result.Details
-                };
+                return BaseResponse<PaginationResult<T>>.BuildErrorResponse(errorResponse!);
             }
+
+            var response = await request.Content.ReadFromJsonAsync<PaginationResult<T>>();
+
+            return BaseResponse<PaginationResult<T>>.BuildSuccessResponse(response!);
         }
 
         public async Task<BaseResponse<PaginationResult<T>>> GetEntitiesPagedWithSearchAsync(int pageIndex, int pageSize, string search)
@@ -133,29 +98,18 @@ namespace BillWare.App.Services
 
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            var response = await _httpClient.GetAsync($"{_controllerName}/GetListPagedWithSearch?pageIndex={pageIndex}&pageSize={pageSize}&search={search}");
+            var request = await _httpClient.GetAsync($"{_controllerName}/GetListPagedWithSearch?pageIndex={pageIndex}&pageSize={pageSize}&search={search}");
 
-            if (response.IsSuccessStatusCode)
+            if (!request.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<PaginationResult<T>>();
-                return new BaseResponse<PaginationResult<T>>
-                {
-                    IsSuccessFul = true,
-                    Data = result
-                };
-            }
-            else
-            {
-                var result = await response.Content.ReadFromJsonAsync<BaseResponse<PaginationResult<T>>>();
+                var errorResponse = await request.Content.ReadFromJsonAsync<BaseResponse<PaginationResult<T>>>();
 
-                return new BaseResponse<PaginationResult<T>>
-                {
-                    IsSuccessFul = false,
-                    Message = result!.Message,
-                    StatusCode = result!.StatusCode,
-                    Details = result.Details
-                };
+                return BaseResponse<PaginationResult<T>>.BuildErrorResponse(errorResponse!);
             }
+            
+            var response = await request.Content.ReadFromJsonAsync<PaginationResult<T>>();
+
+            return BaseResponse<PaginationResult<T>>.BuildSuccessResponse(response!);
         }
 
         public async Task<BaseResponse<T>> GetEntityById(object identity)
@@ -164,29 +118,18 @@ namespace BillWare.App.Services
 
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            var response = await _httpClient.GetAsync($"{_controllerName}/GetById/id={identity}");
+            var request = await _httpClient.GetAsync($"{_controllerName}/GetById/id={identity}");
 
-            if (response.IsSuccessStatusCode)
+            if (!request.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<T>();
-                return new BaseResponse<T>
-                {
-                    IsSuccessFul = true,
-                    Data = result
-                };
-            }
-            else
-            {
-                var result = await response.Content.ReadFromJsonAsync<BaseResponse<T>>();
+                var errorResponse = await request.Content.ReadFromJsonAsync<BaseResponse<T>>();
 
-                return new BaseResponse<T>
-                {
-                    IsSuccessFul = false,
-                    Message = result!.Message,
-                    StatusCode = result!.StatusCode,
-                    Details = result.Details
-                };
+                return BaseResponse<T>.BuildErrorResponse(errorResponse!);
             }
+
+            var response = await request.Content.ReadFromJsonAsync<BaseResponse<T>>();
+
+            return BaseResponse<T>.BuildSuccessResponse(response!.Data!);
         }
 
         public async Task<BaseResponse<T>> UpdateAsync(T entity)
@@ -197,30 +140,18 @@ namespace BillWare.App.Services
 
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.PutAsJsonAsync($"{_controllerName}/Update", entity);
+                var request = await _httpClient.PutAsJsonAsync($"{_controllerName}/Update", entity);
 
-                if (response.IsSuccessStatusCode)
+                if (!request.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<T>();
+                    var errorResponse = await request.Content.ReadFromJsonAsync<BaseResponse<T>>();
 
-                    return new BaseResponse<T>
-                    {
-                        IsSuccessFul = true,
-                        Data = result
-                    };
+                    return BaseResponse<T>.BuildErrorResponse(errorResponse!);
                 }
-                else
-                {
-                    var result = await response.Content.ReadFromJsonAsync<BaseResponse<T>>();
 
-                    return new BaseResponse<T>
-                    {
-                        IsSuccessFul = false,
-                        Message = result!.Message,
-                        StatusCode = result!.StatusCode,
-                        Details = result.Details
-                    };
-                }
+                var response = await request.Content.ReadFromJsonAsync<BaseResponse<T>>();
+
+                return BaseResponse<T>.BuildSuccessResponse(response!.Data!);
             }
             catch (HttpRequestException ex)
             {

@@ -1,6 +1,8 @@
 ﻿using BillWare.App.Common;
+using BillWare.App.Intefaces;
 using BillWare.App.Models;
 using BillWare.Application.Billing.Models;
+using BlazorBootstrap;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Radzen.Blazor;
@@ -10,10 +12,12 @@ namespace BillWare.App.Pages.Dahsboard
     [Authorize(Roles = "Administrator")]
     public partial class Index
     {
+        [Inject] private IDashboardService _dashboardService { get; set; } = null!;
+        [Inject] private IBillingService _billingService { get; set; } = null!;
+
         private PaginationResult<BillingModel> BaseResponse { get; set; } = new PaginationResult<BillingModel>();
         private BillingsParamsModel BillingsParamsModel { get; set; } = new BillingsParamsModel();
-        private RadzenDataGrid<BillingItemModel> grid;
-        private RadzenDataGrid<BillingDataGridDetails> gridDetails;
+        private RadzenDataGrid<BillingDataGridDetails>? gridDetails;
 
         private List<BillingModel> Billings { get; set; } = new List<BillingModel>();
         private List<StatisticsModel> SalesLast30Days { get; set; } = new List<StatisticsModel>();
@@ -33,10 +37,12 @@ namespace BillWare.App.Pages.Dahsboard
 
         private async Task LoadData(int pageIndex, int pageSize = 5)
         {
-            BaseResponse = await _billingService.GetBillings(pageIndex, pageSize);
+            var response = await _billingService.GetEntitiesPagedAsync(pageIndex, pageSize);
+
+            BaseResponse = response.Data!;
             Billings = BaseResponse.Items;
         }
-        private async Task GetWithSearch(string search)
+        private async Task GetBillingsWithSearch(string search)
         {
             IsFiltered = true;
             Search = search;
@@ -51,7 +57,8 @@ namespace BillWare.App.Pages.Dahsboard
             }
             else
             {
-                BaseResponse = await _billingService.GetBillingsWithSearch(Search, PageIndex, PageSize);
+                var response = await _billingService.GetEntitiesPagedWithSearchAsync(PageIndex, PageSize, Search);
+                BaseResponse = response.Data!;
                 Billings = BaseResponse.Items;
                 await LoadDataGridDetails();
                 StateHasChanged();
@@ -91,7 +98,7 @@ namespace BillWare.App.Pages.Dahsboard
             {
                 if (IsFiltered)
                 {
-                    await GetWithSearch(Search);
+                    await GetBillingsWithSearch(Search);
                 }
                 else
                 {
@@ -105,7 +112,7 @@ namespace BillWare.App.Pages.Dahsboard
 
             if (IsFiltered)
             {
-                await GetWithSearch(Search);
+                await GetBillingsWithSearch(Search);
             }
             else
             {

@@ -17,18 +17,29 @@
     </Router>
 </CascadingAuthenticationState>
 
+@if (IsLoading)
+{
+    <LoadingOverlay >
+    </LoadingOverlay>
+}
+
 @code {
     private bool isUserAuthenticated = false;
+    private bool IsLoading = false;
 
     protected override async Task OnInitializedAsync()
     {
+        IsLoading = true;
+
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        isUserAuthenticated = authState.User.Identity.IsAuthenticated;
+        isUserAuthenticated = authState.User.Identity!.IsAuthenticated;
 
         if (!isUserAuthenticated)
         {
             await LocalStorageService.Clear();
             NavigationManager.NavigateTo("account/signin");
         }
+
+        IsLoading = false;
     }
 }

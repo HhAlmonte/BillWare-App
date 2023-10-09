@@ -17,8 +17,10 @@
 </div>
 
 @code {
+
     private bool IsLoginView()
     {
         return NavigationManager.Uri.EndsWith("/signin", StringComparison.OrdinalIgnoreCase);
     }
+
 }

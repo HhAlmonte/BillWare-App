@@ -155,9 +155,9 @@ namespace BillWare.App.Pages.Billing
         }
         private async Task LoadBillingsService()
         {
-            var data = await _billingServiceService.GetBillingsServices(1, 50);
+            var data = await _billingServiceService.GetEntitiesPagedAsync(1, 50);
 
-            BillingsServices = data.Items.Select(x => new BillingItemModel
+            BillingsServices = data.Data!.Items.Select(x => new BillingItemModel
             {
                 Code = x.Id,
                 Description = x.Name,
@@ -246,9 +246,9 @@ namespace BillWare.App.Pages.Billing
         }
         private async Task GetBillingsServicesWithSearch(string searchText)
         {
-            var result = await _billingServiceService.GetBillingsServicesWithSearch(searchText, 1, 100);
+            var result = await _billingServiceService.GetEntitiesPagedWithSearchAsync(1, 100, searchText);
 
-            BillingsServices = result.Items.Select(x => new BillingItemModel
+            BillingsServices = result.Data!.Items.Select(x => new BillingItemModel
             {
                 Code = x.Id,
                 Description = x.Name,
@@ -269,7 +269,7 @@ namespace BillWare.App.Pages.Billing
                 Billing.SellerName = SellerName;
                 Billing.BillingStatus = billingStatus;
 
-                var billingCreated = await _billingService.CreateBilling(Billing);
+                var billingCreated = await _billingService.CreateAsync(Billing);
                 await SweetAlertServices.ShowSuccessAlert("Factura creada", "La factura se creó correctamente");
                 DialogService.Close(billingCreated);
             }
@@ -289,7 +289,7 @@ namespace BillWare.App.Pages.Billing
                 Billing.SellerName = SellerName;
                 Billing.BillingStatus = billingStatus;
 
-                await _billingService.UpdateBilling(Billing);
+                await _billingService.UpdateAsync(Billing);
                 await SweetAlertServices.ShowSuccessAlert("Factura actualizada", "La factura se actualizó correctamente");
                 DialogService.Close(Billing);
             }

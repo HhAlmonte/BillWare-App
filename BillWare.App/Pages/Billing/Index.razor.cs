@@ -36,7 +36,8 @@ namespace BillWare.App.Pages.Billing
         {
             try
             {
-                BaseResponse = await _billingService.GetBillings(pageIndex, pageSize);
+                var response = await _billingService.GetEntitiesPagedAsync(pageIndex, pageSize);
+                BaseResponse = response.Data;
                 Billings = BaseResponse.Items;
             }
             catch (HttpRequestException ex)
@@ -71,8 +72,9 @@ namespace BillWare.App.Pages.Billing
                 }
                 else
                 {
-                    BaseResponse = await _billingService.GetBillingsWithSearch(Search, PageIndex, PageSize);
-                    Billings = BaseResponse.Items;
+                    var response = await _billingService.GetEntitiesPagedWithSearchAsync(PageIndex, PageSize, Search);
+                    BaseResponse = response!.Data;
+                    Billings = BaseResponse!.Items;
                 }
             }
             catch (HttpRequestException ex)
@@ -124,7 +126,7 @@ namespace BillWare.App.Pages.Billing
             {
                 try
                 {
-                    var billingDeleted = await _billingService.DeleteBilling((int)id);
+                    var billingDeleted = await _billingService.DeleteAsync((int)id!);
 
                     await LoadData(PageIndex, PageSize);
 
@@ -148,7 +150,7 @@ namespace BillWare.App.Pages.Billing
             {
                 try
                 {
-                    var billingItemDeleted = await _billingItemService.DeleteBillingItem((int)id);
+                    var billingItemDeleted = await _billingItemService.DeleteBillingItem((int)id!);
 
                     await LoadData(PageIndex, PageSize);
 
@@ -181,7 +183,7 @@ namespace BillWare.App.Pages.Billing
 
                 billing.InvoiceDocument = await pdfConversionService.ConvertHtmlToPdf(htmlContent);
 
-                var invoiceUpdated = await _billingService.UpdateBilling(billing);
+                var invoiceUpdated = await _billingService.UpdateAsync(billing);
                 var printInvoice = await SweetAlertServices.ShowWarningAlert("¿Desea imprimir la factura?", "Se abrirá una nueva ventana para imprimir la factura.");
                 
                 if (printInvoice)

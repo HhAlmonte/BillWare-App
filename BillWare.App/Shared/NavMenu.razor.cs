@@ -8,7 +8,7 @@ namespace BillWare.App.Shared
     [Authorize]
     public partial class NavMenu
     {
-        [Inject] BeamAuthenticationStateProviderHelper AuthenticationStateProvider { get; set; }
+        [Inject] BeamAuthenticationStateProviderHelper? AuthenticationStateProvider { get; set; }
 
         private bool IsMenuOpen = false;
         private string DashboardClass = "menu-dashboard";
@@ -48,9 +48,12 @@ namespace BillWare.App.Shared
 
         protected override async Task OnInitializedAsync()
         {
-            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var authState = await AuthenticationStateProvider!.GetAuthenticationStateAsync();
+
             LoadMenuItem();
-            Role = authState.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role).Value;
+
+            Role = authState.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role)!.Value;
+
         }
     }
 }

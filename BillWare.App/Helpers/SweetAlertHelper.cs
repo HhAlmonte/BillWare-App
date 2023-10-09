@@ -1,6 +1,5 @@
 ﻿using CurrieTechnologies.Razor.SweetAlert2;
 using Microsoft.JSInterop;
-using System.Threading.Tasks;
 
 public static class SweetAlertServices
 {
@@ -9,6 +8,20 @@ public static class SweetAlertServices
     public static void Initialize(IJSRuntime jsRuntime)
     {
         Swal = new SweetAlertService(jsRuntime);
+    }
+
+    public static async Task ShowToastAlert(string title, string message, SweetAlertIcon? sweetAlertIcon = null)
+    {
+        await Swal.FireAsync(new SweetAlertOptions
+        {
+            Title = title,
+            Text = message,
+            Icon = sweetAlertIcon ?? SweetAlertIcon.Success,
+            Toast = true,
+            Position = SweetAlertPosition.TopEnd,
+            ShowConfirmButton = false,
+            Timer = 6000
+        });
     }
 
     public static async Task ShowSuccessAlert(string title, string message)
@@ -45,6 +58,4 @@ public static class SweetAlertServices
 
         return !string.IsNullOrEmpty(action.Value);
     }
-
-    // You can add more methods for other types of alerts if needed
 }

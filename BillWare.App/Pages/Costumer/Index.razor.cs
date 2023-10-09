@@ -13,9 +13,9 @@ namespace BillWare.App.Pages.Costumer
     [Authorize("Administrator, Operator")]
     public partial class Index
     {
-        [Inject] ICostumerService _costumerService { get; set; }
-        [Inject] public DialogService DialogService { get; set; }
-        [Inject] BeamAuthenticationStateProviderHelper BeamAuthenticationStateProviderHelper { get; set; }
+        [Inject] ICostumerService? _costumerService { get; set; }
+        [Inject] public DialogService? DialogService { get; set; }
+        [Inject] BeamAuthenticationStateProviderHelper? BeamAuthenticationStateProviderHelper { get; set; }
 
         private PaginationResult<CostumerModel> PaginationResult { get; set; } = new PaginationResult<CostumerModel>();
         private List<CostumerModel> Costumers { get; set; } = new List<CostumerModel>();
@@ -34,20 +34,20 @@ namespace BillWare.App.Pages.Costumer
 
         private async Task LoadData(int pageIndex, int pageSize = 5)
         {
-            try
+            Search = string.Empty;
+
+            var response = await _costumerService!.GetEntitiesPagedAsync(pageIndex, pageSize);
+
+            if (!response.IsSuccessFul)
             {
-                Search = string.Empty;
+                await SweetAlertServices.ShowSuccessAlert(response.Message, response.Details!);
 
-                var response = await _costumerService.GetEntitiesPagedAsync(pageIndex, pageSize);
-
-                PaginationResult = response.Data;
-
-                Costumers = PaginationResult.Items;
+                return;
             }
-            catch (Exception)
-            {
-                await SweetAlertServices.ShowErrorAlert("Error", "Error al cargar los datos. Favor de contactar con el administrador del sistema.");
-            }
+
+            PaginationResult = response.Data!;
+
+            Costumers = PaginationResult.Items;
         }
 
         private async Task OpenAddDialogForm(string title)
@@ -111,9 +111,16 @@ namespace BillWare.App.Pages.Costumer
             }
             else
             {
-                var response = await _costumerService.GetEntitiesPagedWithSearchAsync(PageIndex, PageSize, search);
+                var response = await _costumerService!.GetEntitiesPagedWithSearchAsync(PageIndex, PageSize, search);
 
-                PaginationResult = response.Data;
+                if (!response.IsSuccessFul)
+                {
+                    await SweetAlertServices.ShowSuccessAlert(response.Message, response.Details!);
+
+                    return;
+                }
+
+                PaginationResult = response.Data!;
 
                 Costumers = PaginationResult.Items;
             }
@@ -155,11 +162,11 @@ namespace BillWare.App.Pages.Costumer
 
                 if (isConfirmed)
                 {
-                    var response = await _costumerService.DeleteAsync(id);
+                    var response = await _costumerService!.DeleteAsync(id);
 
                     if (!response.IsSuccessFul)
                     {
-                        await SweetAlertServices.ShowErrorAlert("Error", response.Message);
+                        await SweetAlertServices.ShowErrorAlert(response.Message, response.Details!);
                         return;
                     }
 
@@ -185,7 +192,7 @@ namespace BillWare.App.Pages.Costumer
         {
             IsLoading = true;
 
-            var userAuth = await BeamAuthenticationStateProviderHelper.GetAuthenticationStateAsync();
+            var userAuth = await BeamAuthenticationStateProviderHelper!.GetAuthenticationStateAsync();
 
             IsAdmin = userAuth.User.IsInRole("Administrator");
 

@@ -7,87 +7,15 @@ using System.Net.Http.Json;
 
 namespace BillWare.App.Services
 {
-    public class BillingService : IBillingService
+    public class BillingService : BaseCrudService<BillingModel> ,IBillingService
     {
         private readonly HttpClient _httpClient;
         private readonly LocalStorageHelper _localStorageService;
 
-        public BillingService(HttpClient http, LocalStorageHelper localStorageService)
+        public BillingService(HttpClient http, LocalStorageHelper localStorageService) : base(http, localStorageService, "Billing")
         {
             _httpClient = http;
             _localStorageService = localStorageService;
-        }
-
-        public async Task<BillingModel> CreateBilling(BillingModel model)
-        {
-            try
-            {
-                var token = await _localStorageService.GetItem(Configuration.TOKEN);
-
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _httpClient.PostAsJsonAsync("Billing/CreateBilling", model);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<BillingModel>();
-                    return result;
-                }
-                else
-                {
-                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
-                }
-            }
-            catch (HttpRequestException ex)
-            {
-                throw ex;
-            }
-        }
-
-        public async Task<bool> DeleteBilling(int id)
-        {
-            try
-            {
-                var token = await _localStorageService.GetItem(Configuration.TOKEN);
-
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _httpClient.DeleteAsync($"Billing/DeleteBilling?id={id}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    return true;
-                }
-                else
-                {
-                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
-                }
-            }
-            catch (HttpRequestException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        public async Task<PaginationResult<BillingModel>> GetBillings(int pageIndex, int pageSize)
-        {
-            var token = await _localStorageService.GetItem(Configuration.TOKEN);
-
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            var response = await _httpClient.GetAsync($"Billing/GetListPaged?pageIndex={pageIndex}&pageSize={pageSize}");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<PaginationResult<BillingModel>>();
-                return result;
-            }
-            else
-            {
-                throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
-            }
         }
 
         public async Task<PaginationResult<BillingModel>> GetBillingsWithParams(BillingsParamsModel billingsParams)
@@ -108,25 +36,7 @@ namespace BillWare.App.Services
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<PaginationResult<BillingModel>>();
-                return result;
-            }
-            else
-            {
-                throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
-            }
-        }
 
-        public async Task<PaginationResult<BillingModel>> GetBillingsWithSearch(string search, int pageIndex, int pageSize)
-        {
-            var token = await _localStorageService.GetItem(Configuration.TOKEN);
-
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            var response = await _httpClient.GetAsync($"Billing/GetListPagedWithSearch?search={search}&pageIndex={pageIndex}&pageSize={pageSize}");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<PaginationResult<BillingModel>>();
                 return result;
             }
             else
@@ -137,61 +47,20 @@ namespace BillWare.App.Services
 
         public async Task<int> GetLastInvoiceNumber()
         {
-            try
-            {
-                var token = await _localStorageService.GetItem(Configuration.TOKEN);
+            var token = await _localStorageService.GetItem(Configuration.TOKEN);
 
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.GetAsync("Billing/GetInvoiceNumber");
+            var request = await _httpClient.GetAsync("Billing/GetInvoiceNumber");
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<int>();
-                    return result;
-                }
-                else
-                {
-                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
-                }
-            }
-            catch (HttpRequestException ex)
+            if (request.IsSuccessStatusCode)
             {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
+                var result = await request.Content.ReadFromJsonAsync<int>();
 
-        public async Task<BillingModel> UpdateBilling(BillingModel model)
-        {
-            try
-            {
-                var token = await _localStorageService.GetItem(Configuration.TOKEN);
+                return result;
+            }
 
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _httpClient.PutAsJsonAsync("Billing/UpdateBilling", model);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<BillingModel>();
-                    return result;
-                }
-                else
-                {
-                    throw new HttpRequestException($"Error de solicitud HTTP: {response.StatusCode}");
-                }
-            }
-            catch (HttpRequestException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            throw new HttpRequestException($"Error de solicitud HTTP: {request.StatusCode}");
         }
     }
 }

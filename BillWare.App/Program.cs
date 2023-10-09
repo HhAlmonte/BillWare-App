@@ -16,6 +16,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddBlazorBootstrap();
 builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<InternetConnectionHelper>();
 builder.Services.AddScoped(typeof(IBaseCrudService<>), typeof(BaseCrudService<>));
 builder.Services.AddScoped<JWTAuthenticationStateProviderService>();
 builder.Services.AddScoped<BeamAuthenticationStateProviderHelper>();

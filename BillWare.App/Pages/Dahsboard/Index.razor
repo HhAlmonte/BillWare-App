@@ -1,8 +1,4 @@
 ﻿@page "/"
-@using BillWare.App.Enum;
-@inject LocalStorageHelper _localStorageService;
-@inject IBillingService _billingService;
-@inject IDashboardService _dashboardService;
 
 <h3>Resumen</h3>
 
@@ -43,11 +39,11 @@
 
 <div style="display: flex; align-items: center;" class="mb-2">
     <span style="margin-right: 1rem;">Buscar:</span>
-    <RadzenTextBox Placeholder="Presione ENTER al buscar" Change="@(async(e) => await GetWithSearch(e))" />
+    <RadzenTextBox Placeholder="Presione ENTER al buscar" Change="@(async(e) => await GetBillingsWithSearch(e))" />
     <span style="margin-right: 1rem; margin-left: 1rem">Filtrar por fechas:</span>
-    <RadzenDatePicker @bind-Value="BillingsParamsModel.InitialDate" DateFormat="dd/MM/yyyy"/>
+    <RadzenDatePicker Placeholder="Fecha inicial" @bind-Value="BillingsParamsModel.InitialDate" DateFormat="dd/MM/yyyy"/>
     <span style="margin: 0 0.5rem;">hasta</span>
-    <RadzenDatePicker @bind-Value="BillingsParamsModel.FinalDate" DateFormat="dd/MM/yyyy"/>
+    <RadzenDatePicker Placeholder="Fecha final" @bind-Value="BillingsParamsModel.FinalDate" DateFormat="dd/MM/yyyy" />
 
     <RadzenButton style="margin-left: 0.5rem" Icon="search" ButtonStyle="ButtonStyle.Success" Click="@(async() => await LoadWithParams())" />
 </div>
@@ -58,14 +54,17 @@
                 AllowColumnResize="true"
                 ExpandMode="DataGridExpandMode.Single">
     <EmptyTemplate>
-        <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">No records to display.</p>
+        <div class="text-center">
+            <i style="font-size:3rem" class="text-muted bx bx-search-alt mt-2"></i>
+            <p class="text-muted">La lista está vacía.</p>
+        </div>
     </EmptyTemplate>
     <Template Context="billingItems">
         <RadzenCard Style="margin-bottom:20px">
             productos registrados por el cliente: <b>@billingItems.FullName (@billingItems.BillingItems.Count())   </b>
         </RadzenCard>
 
-        <RadzenDataGrid Data="@billingItems.BillingItems" AllowColumnResize Responsive TItem="BillingItemModel" AllowPaging PageSize="5" @ref="grid">
+        <RadzenDataGrid Data="@billingItems.BillingItems" AllowColumnResize Responsive TItem="BillingItemModel" AllowPaging PageSize="5">
              <Columns>
                  <RadzenDataGridColumn TItem="BillingItemModel" Property="Code" Title="Codigo" />
                  <RadzenDataGridColumn TItem="BillingItemModel" Property="Description" Title="Descripción" />
@@ -153,6 +152,12 @@
     <div class="col-8"></div>
     <div class="col-4">
         <RadzenDataGrid Data="BillingDataGridDetails" @ref="gridDetails" AllowColumnResize Responsive TItem="BillingDataGridDetails">
+            <EmptyTemplate>
+                 <div class="text-center">
+                     <i style="font-size:3rem" class="text-muted bx bx-search-alt mt-2"></i>
+                     <p class="text-muted">La lista está vacía.</p>
+                 </div>
+            </EmptyTemplate>
             <Columns>
                 <RadzenDataGridColumn TItem="BillingDataGridDetails"
                                       Property="Currency"
