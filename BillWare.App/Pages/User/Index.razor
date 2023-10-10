@@ -1,8 +1,5 @@
 ﻿@page "/user/index"
 
-@inject IUserService _userService;
-@inject DialogService DialogService;
-
 <h3>Usuarios</h3>
 
 <hr />
@@ -14,7 +11,10 @@
                 Responsive
                 AllowColumnResize>
     <EmptyTemplate>
-        <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">No records to display.</p>
+        <div class="text-center">
+            <i style="font-size:3rem" class="text-muted bx bx-search-alt mt-2"></i>
+            <p class="text-muted">La lista está vacía.</p>
+        </div>
     </EmptyTemplate>
     <Columns>
         <RadzenDataGridColumn TItem="UserModel"

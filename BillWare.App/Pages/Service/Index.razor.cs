@@ -52,7 +52,7 @@ namespace BillWare.App.Pages.Service
 
                 IsLoading = false;
 
-                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El servicio se ha creado correctamente. Se actualizará en breve.", SweetAlertIcon.Success);
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El servicio se ha creado correctamente. Se actualizará la lista en breve.", SweetAlertIcon.Success);
             }
         }
         private async Task OpenEditDialogForm(string title, BillingServiceModel billingService)
@@ -78,7 +78,7 @@ namespace BillWare.App.Pages.Service
 
                 IsLoading = false;
 
-                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El servicio se ha actualizado correctamente. Se actualizará en breve.", SweetAlertIcon.Success);
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El servicio se ha actualizado correctamente. Se actualizará la lista en breve.", SweetAlertIcon.Success);
             }
         }
 
@@ -88,7 +88,7 @@ namespace BillWare.App.Pages.Service
 
             var response = await _billingService!.GetEntitiesPagedAsync(pageIndex, pageSize);
 
-            if (!response.IsSuccessFul)
+            if (!response.IsSuccessFull)
             {
                 await SweetAlertServices.ShowToastAlert("Ocurrió un error", response.Message, SweetAlertIcon.Error);
                 return;
@@ -111,7 +111,7 @@ namespace BillWare.App.Pages.Service
 
             var response = await _billingService!.GetEntitiesPagedWithSearchAsync(PageIndex, PageSize, search);
 
-            if (!response.IsSuccessFul)
+            if (!response.IsSuccessFull)
             {
                 await SweetAlertServices.ShowToastAlert(response.Message, response.Details!, SweetAlertIcon.Error);
 
@@ -161,7 +161,7 @@ namespace BillWare.App.Pages.Service
             {
                 var response = await _billingService!.DeleteAsync(id);
 
-                if (!response.IsSuccessFul)
+                if (!response.IsSuccessFull)
                 {
                     await SweetAlertServices.ShowToastAlert(response.Message, response.Details!, SweetAlertIcon.Error);
                     return;
@@ -176,6 +176,8 @@ namespace BillWare.App.Pages.Service
                 }
 
                 await LoadData(PageIndex, PageSize);
+
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El servicio se ha eliminado correctamente. Se actualizará la lista en breve.", SweetAlertIcon.Success);
             }
         }
 

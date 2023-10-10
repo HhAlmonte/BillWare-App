@@ -6,21 +6,30 @@ using Radzen;
 using Microsoft.AspNetCore.Authorization;
 using BillWare.App.Helpers;
 using BillWare.App.Enum;
+using BillWare.App.Intefaces;
 
 namespace BillWare.App.Pages.Billing
 {
     [Authorize("Administrator, Operator")]
     public partial class BillingForm
     {
+        [Inject] private IBillingService? _billingService { get; set; }
+        [Inject] private IBillingItemService? _billingItemService { get; set; }
+        [Inject] private ICostumerService? _costumerService { get; set; }
+        [Inject] private IInventoryService? _inventoryService { get; set; }
+        [Inject] private IServicesService? _billingServiceService { get; set; }
+        [Inject] private DialogService? DialogService { get; set; }
+        [Inject] BeamAuthenticationStateProviderHelper? BeamAuthenticationStateProviderHelper { get; set; }
+
         [Parameter] public BillingModel BillingParameter { get; set; } = new BillingModel();
         [Parameter] public FormModeEnum FormMode { get; set; } = FormModeEnum.ADD;
-        [Inject] private LocalStorageHelper LocalStorageService { get; set; }
+
 
         private BillingModel Billing = new BillingModel()
         {
             CreatedAt = DateTime.Now
         };
-        private RadzenDataGrid<BillingItemModel> grid;
+        private RadzenDataGrid<BillingItemModel>? grid;
         private InvoiceNumberGenerator InvoiceNumberGenerator = new InvoiceNumberGenerator("FACT");
 
         private List<PaymentMethod> PaymentMethods { get; set; } = new List<PaymentMethod>
@@ -47,8 +56,8 @@ namespace BillWare.App.Pages.Billing
 
 
         public string ReturnMoney { get; set; } = "0";
-        private string CostumerId { get; set; }
-        private string SellerName { get; set; }
+        private string? CostumerId { get; set; }
+        private string? SellerName { get; set; }
 
         private void OnDropDowmChange()
         {
@@ -77,11 +86,11 @@ namespace BillWare.App.Pages.Billing
 
         private async Task OpenQuantityormDialog(int quantity, int code)
         {
-            var dialogResponse = await DialogService.OpenAsync<QuantityForm>("Modificar cantidad"
+            var dialogResponse = await DialogService!.OpenAsync<QuantityForm>("Modificar cantidad"
                 , parameters: new Dictionary<string, object>
-                    {
-                        { "QuantityParameter", quantity }
-                    }
+                {
+                    { "QuantityParameter", quantity }
+                }
                 , options: new DialogOptions
                 {
                     Width = "auto"
@@ -107,7 +116,7 @@ namespace BillWare.App.Pages.Billing
 
             CalculateNetoAndTotalPrice();
 
-            await grid.Reload();
+            await grid!.Reload();
 
         }
 
@@ -116,32 +125,26 @@ namespace BillWare.App.Pages.Billing
             if (string.IsNullOrEmpty(CostumerId))
             {
                 await SweetAlertServices.ShowErrorAlert("Codigo invalido", "Primero debe ingresar un código");
+                return;
             }
 
-            try
-            {
-                int costumerId = Convert.ToInt32(CostumerId);
+            int costumerId = Convert.ToInt32(CostumerId);
 
-                var costumer = await _costumerService.GetEntityById(costumerId);
+            var costumer = await _costumerService!.GetEntityById(costumerId);
 
-                Billing.FullName = costumer.Data.FullName;
-                Billing.Address = costumer.Data.Address;
-                Billing.Phone = costumer.Data.Phone;
-                Billing.NumberId = costumer.Data.NumberId;
-            }
-            catch (Exception ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Error encontrando al usuario", "Intenta probando con otro código");
-            }
+            Billing.FullName = costumer.Data!.FullName;
+            Billing.Address = costumer.Data.Address;
+            Billing.Phone = costumer.Data.Phone;
+            Billing.NumberId = costumer.Data.NumberId;
 
             StateHasChanged();
         }
 
         private async Task LoadInventories()
         {
-            var data = await _inventoryService.GetInventories(1, 50);
+            var data = await _inventoryService!.GetEntitiesPagedAsync(1, 50);
 
-            Inventories = data.Items.Select(x => new BillingItemModel
+            Inventories = data.Data!.Items.Select(x => new BillingItemModel
             {
                 Code = x.Id,
                 Description = x.Name,
@@ -155,7 +158,7 @@ namespace BillWare.App.Pages.Billing
         }
         private async Task LoadBillingsService()
         {
-            var data = await _billingServiceService.GetEntitiesPagedAsync(1, 50);
+            var data = await _billingServiceService!.GetEntitiesPagedAsync(1, 50);
 
             BillingsServices = data.Data!.Items.Select(x => new BillingItemModel
             {
@@ -175,7 +178,7 @@ namespace BillWare.App.Pages.Billing
         {
             if (FormMode == FormModeEnum.EDIT)
             {
-                await _billingItemService.DeleteBillingItem(billingItem.Id);
+                await _billingItemService!.DeleteBillingItem(billingItem.Id);
             }
             else
             {
@@ -198,7 +201,7 @@ namespace BillWare.App.Pages.Billing
 
             CalculateNetoAndTotalPrice();
 
-            await grid.Reload();
+            await grid!.Reload();
         }
 
         public decimal CalcularITBIS(decimal monto)
@@ -230,9 +233,9 @@ namespace BillWare.App.Pages.Billing
 
         private async Task GetInventoryWithSearch(string searchText)
         {
-            var result = await _inventoryService.GetInventoryWithSearch(searchText, 1, 100);
+            var result = await _inventoryService!.GetEntitiesPagedWithSearchAsync(1, 100, searchText);
 
-            Inventories = result.Items.Select(x => new BillingItemModel
+            Inventories = result.Data!.Items.Select(x => new BillingItemModel
             {
                 Code = x.Id,
                 Description = x.Name,
@@ -246,7 +249,7 @@ namespace BillWare.App.Pages.Billing
         }
         private async Task GetBillingsServicesWithSearch(string searchText)
         {
-            var result = await _billingServiceService.GetEntitiesPagedWithSearchAsync(1, 100, searchText);
+            var result = await _billingServiceService!.GetEntitiesPagedWithSearchAsync(1, 100, searchText);
 
             BillingsServices = result.Data!.Items.Select(x => new BillingItemModel
             {
@@ -264,43 +267,21 @@ namespace BillWare.App.Pages.Billing
 
         private async Task Add(int billingStatus)
         {
-            try
-            {
-                Billing.SellerName = SellerName;
-                Billing.BillingStatus = billingStatus;
+            Billing.SellerName = SellerName!;
+            Billing.BillingStatus = billingStatus;
 
-                var billingCreated = await _billingService.CreateAsync(Billing);
-                await SweetAlertServices.ShowSuccessAlert("Factura creada", "La factura se creó correctamente");
-                DialogService.Close(billingCreated);
-            }
-            catch (HttpRequestException ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
+            var billingCreated = await _billingService!.CreateAsync(Billing);
+            await SweetAlertServices.ShowSuccessAlert("Factura creada", "La factura se creó correctamente");
+            DialogService!.Close(billingCreated);
         }
         private async Task Edit(int billingStatus)
         {
-            try
-            {
-                Billing.SellerName = SellerName;
-                Billing.BillingStatus = billingStatus;
+            Billing.SellerName = SellerName!;
+            Billing.BillingStatus = billingStatus;
 
-                await _billingService.UpdateAsync(Billing);
-                await SweetAlertServices.ShowSuccessAlert("Factura actualizada", "La factura se actualizó correctamente");
-                DialogService.Close(Billing);
-            }
-            catch (HttpRequestException ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
+            await _billingService!.UpdateAsync(Billing);
+            await SweetAlertServices.ShowSuccessAlert("Factura actualizada", "La factura se actualizó correctamente");
+            DialogService!.Close(Billing);
         }
         private async Task OnSubmit(int billingStatus = 1)
         {
@@ -318,7 +299,9 @@ namespace BillWare.App.Pages.Billing
 
         protected override async Task OnInitializedAsync()
         {
-            SellerName = await LocalStorageService.GetItem("FullName");
+            var userAuth = await BeamAuthenticationStateProviderHelper!.GetAuthenticationStateAsync();
+
+            SellerName = userAuth.User!.Identity!.Name;
 
             await LoadInventories();
 
@@ -340,7 +323,7 @@ namespace BillWare.App.Pages.Billing
             {
                 try
                 {
-                    var invoiceNumber = await _billingService.GetLastInvoiceNumber();
+                    var invoiceNumber = await _billingService!.GetLastInvoiceNumber();
 
                     Billing.InvoiceNumber = InvoiceNumberGenerator.GenerateNumber(invoiceNumber);
                 }
@@ -359,6 +342,6 @@ namespace BillWare.App.Pages.Billing
     public class PaymentMethod
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }

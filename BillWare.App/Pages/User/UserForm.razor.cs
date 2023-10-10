@@ -35,18 +35,15 @@ namespace BillWare.App.Pages.User
 
         public async Task Add()
         {
-            try
-            {
-                var response = await _authService.RegisterAsync(Registration);
+            var response = await _authService.RegisterAsync(Registration);
 
-                var closeReturn = response != null ? true : false;
-
-                DialogService.Close(closeReturn);
-            }
-            catch (Exception ex)
+            if (!response.IsSuccessStatusCode)
             {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
+                return;
             }
+
+            var closeReturn = response != null ? true : false;
+            DialogService.Close(closeReturn);
         }
 
         public async Task Edit()
@@ -63,20 +60,16 @@ namespace BillWare.App.Pages.User
                 Role = Registration.Role
             };
 
-            try
+            var response = await _userService.UpdateAsync(userToUpdate);
+
+            if (!response.IsSuccessFull)
             {
-                var response = await _userService.UpdateUser(userToUpdate);
-
-                var closeReturn = response != null ? true : false;
-
-                await SweetAlertServices.ShowSuccessAlert("Usuario actualizado", "El usuario se actualizó correctamente");
-
-                DialogService.Close(closeReturn);
+                await SweetAlertServices.ShowErrorAlert(response.Message, response.Details!);
+                return;
             }
-            catch (Exception ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
+
+            var closeReturn = response != null ? true : false;
+            DialogService.Close(closeReturn);
         }
 
         protected override void OnInitialized()

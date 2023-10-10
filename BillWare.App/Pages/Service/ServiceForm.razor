@@ -5,13 +5,26 @@
         <div class="col-md-6">
             <div class="form-group">
                 <RadzenLabel Text="Nombre"></RadzenLabel>
-                <RadzenTextBox Name="Name" @bind-Value="@BillingService.Name" class="form-control" />
-                <RadzenRequiredValidator Component="Name" Text="Introducir nombre" Popup="true" Style="position: absolute" />
+                <RadzenTextBox Name="Name" 
+                               @bind-Value="@BillingService.Name" 
+                               class="form-control" />
+
+                <RadzenRequiredValidator Component="Name" 
+                                         Text="Introducir nombre" 
+                                         Popup="true" 
+                                         Style="position: absolute" />
             </div>
             <div class="form-group">
                 <RadzenLabel Text="Precio"></RadzenLabel>
-                <RadzenNumeric Name="Price" @bind-Value="@BillingService.Price" class="form-control" />
-                <RadzenRequiredValidator Component="Price" Text="Introducir precio" Popup="true" Style="position: absolute" />
+                <RadzenNumeric Name="Price" 
+                               Format="C"
+                               @bind-Value="@BillingService.Price" 
+                               class="form-control" />
+
+                <RadzenRequiredValidator Component="Price" 
+                                         Text="Introducir precio" 
+                                         Popup="true" 
+                                         Style="position: absolute" />
             </div>
         </div>
         <div class="col-md-6">

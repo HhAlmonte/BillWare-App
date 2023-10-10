@@ -2,7 +2,7 @@
 {
     public class BaseResponse<T>
     {
-        public bool IsSuccessFul { get; set; }
+        public bool IsSuccessFull { get; set; }
         public string Message { get; set; } = string.Empty;
         public int StatusCode { get; set; }
         public string? Details { get; set; }
@@ -13,7 +13,7 @@
         {
             return new BaseResponse<T>
             {
-                IsSuccessFul = true,
+                IsSuccessFull = true,
                 Data = data
             };
         }
@@ -22,7 +22,7 @@
         {
             return new BaseResponse<T>
             {
-                IsSuccessFul = false,
+                IsSuccessFull = false,
                 Message = errorResponse!.Message,
                 StatusCode = errorResponse!.StatusCode,
                 Details = errorResponse!.Details

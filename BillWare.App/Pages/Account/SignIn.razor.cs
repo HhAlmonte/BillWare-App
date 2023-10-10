@@ -28,7 +28,7 @@ namespace BillWare.App.Pages.Account
 
             var response = await _authenticationStateProvider!.LoginAsync(loginPayload);
 
-            if (!response.IsSuccessFul)
+            if (!response.IsSuccessFull)
             {
                 await SweetAlertServices.ShowErrorAlert(response.Message, response.Details!);
                 IsLoading = false;

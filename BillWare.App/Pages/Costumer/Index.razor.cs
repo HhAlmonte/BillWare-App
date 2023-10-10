@@ -3,9 +3,9 @@ using BillWare.App.Enum;
 using BillWare.App.Helpers;
 using BillWare.App.Intefaces;
 using BillWare.App.Models;
+using CurrieTechnologies.Razor.SweetAlert2;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Authorization;
 using Radzen;
 
 namespace BillWare.App.Pages.Costumer
@@ -38,10 +38,9 @@ namespace BillWare.App.Pages.Costumer
 
             var response = await _costumerService!.GetEntitiesPagedAsync(pageIndex, pageSize);
 
-            if (!response.IsSuccessFul)
+            if (!response.IsSuccessFull)
             {
-                await SweetAlertServices.ShowSuccessAlert(response.Message, response.Details!);
-
+                await SweetAlertServices.ShowToastAlert("Ocurrió un error", response.Message, SweetAlertIcon.Error);
                 return;
             }
 
@@ -52,17 +51,17 @@ namespace BillWare.App.Pages.Costumer
 
         private async Task OpenAddDialogForm(string title)
         {
-            var dialogResponse = await DialogService.OpenAsync<CostumerForm>(title,
-                    new Dictionary<string, object>
-                    {
-                        { "FormMode", FormModeEnum.ADD }
-                    },
-                    new DialogOptions
-                    {
-                        Width = "auto"
-                    });
+            var dialogResult = await DialogService!.OpenAsync<CostumerForm>(title,
+                      new Dictionary<string, object>
+                      {
+                          { "FormMode", FormModeEnum.ADD }
+                      },
+                      new DialogOptions
+                      {
+                          Width = "auto"
+                      });
 
-            var isLoad = dialogResponse == null ? false : true;
+            var isLoad = dialogResult == null ? false : true;
 
             if (isLoad)
             {
@@ -71,12 +70,14 @@ namespace BillWare.App.Pages.Costumer
                 await LoadData(PageIndex, PageSize);
 
                 IsLoading = false;
+
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El cliente se ha creado correctamente. La lista se actualizará en breve.", SweetAlertIcon.Success);
             }
         }
 
         private async Task OpenEditDialogForm(string title, CostumerModel costumer)
         {
-            var dialogResponse = await DialogService.OpenAsync<CostumerForm>(title,
+            var dialogResponse = await DialogService!.OpenAsync<CostumerForm>(title,
                     new Dictionary<string, object>
                     {
                         { "FormMode", FormModeEnum.EDIT },
@@ -96,10 +97,12 @@ namespace BillWare.App.Pages.Costumer
                 await LoadData(PageIndex, PageSize);
 
                 IsLoading = false;
+
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El cliente se ha actualizado correctamente. La lista se actualizará en breve.", SweetAlertIcon.Success);
             }
         }
 
-        private async Task GetWithSearch(string search)
+        private async Task GetCostumersWithSearch(string search)
         {
             IsFiltered = true;
             Search = search;
@@ -108,21 +111,17 @@ namespace BillWare.App.Pages.Costumer
             {
                 IsFiltered = false;
                 await LoadData(PageIndex, PageSize);
+                return;
             }
-            else
+
+            var response = await _costumerService!.GetEntitiesPagedWithSearchAsync(PageIndex, PageSize, search);
+
+            PaginationResult = response.Data!;
+            Costumers = PaginationResult.Items;
+
+            if (Costumers.Count <= 0)
             {
-                var response = await _costumerService!.GetEntitiesPagedWithSearchAsync(PageIndex, PageSize, search);
-
-                if (!response.IsSuccessFul)
-                {
-                    await SweetAlertServices.ShowSuccessAlert(response.Message, response.Details!);
-
-                    return;
-                }
-
-                PaginationResult = response.Data!;
-
-                Costumers = PaginationResult.Items;
+                await SweetAlertServices.ShowToastAlert("No hay registros", "No se encontraron registros", SweetAlertIcon.Warning);
             }
         }
 
@@ -132,7 +131,7 @@ namespace BillWare.App.Pages.Costumer
 
             if (IsFiltered)
             {
-                await GetWithSearch(Search);
+                await GetCostumersWithSearch(Search);
             }
             else
             {
@@ -146,7 +145,7 @@ namespace BillWare.App.Pages.Costumer
 
             if (IsFiltered)
             {
-                await GetWithSearch(Search);
+                await GetCostumersWithSearch(Search);
             }
             else
             {
@@ -156,35 +155,27 @@ namespace BillWare.App.Pages.Costumer
 
         private async Task DeleteCostumer(int id)
         {
-            try
-            {
-                var isConfirmed = await SweetAlertServices.ShowWarningAlert("¿Estás seguro de eliminar este registro?", "Verifica que este registro sea el que quieres eliminar");
+            var isConfirmed = await SweetAlertServices.ShowWarningAlert("¿Estás seguro de eliminar este registro?", "Verifica que este registro sea el que quieres eliminar");
 
-                if (isConfirmed)
+            if (isConfirmed)
+            {
+                var response = await _costumerService!.DeleteAsync(id);
+
+                if (!response.IsSuccessFull)
                 {
-                    var response = await _costumerService!.DeleteAsync(id);
-
-                    if (!response.IsSuccessFul)
-                    {
-                        await SweetAlertServices.ShowErrorAlert(response.Message, response.Details!);
-                        return;
-                    }
-
-                    if (Costumers.Count == 1 && PageIndex != 1)
-                    {
-                        PageIndex -= 1;
-
-                        await LoadData(PageIndex, PageSize);
-                    }
-                    else
-                    {
-                        await LoadData(PageIndex, PageSize);
-                    }
+                    await SweetAlertServices.ShowToastAlert(response.Message, response.Details!, SweetAlertIcon.Error);
+                    return;
                 }
-            }
-            catch (Exception)
-            {
-                await SweetAlertServices.ShowErrorAlert("Error", "Se producieron algunos errrores internos. Favor de reportar con el administrador");
+
+                if (Costumers.Count == 1 && PageIndex != 1)
+                {
+                    PageIndex -= 1;
+                    await LoadData(PageIndex, PageSize);
+                    return;
+                }
+
+                await LoadData(PageIndex, PageSize);
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El cliente se ha eliminado correctamente. La lista se actualizará en breve.", SweetAlertIcon.Success);
             }
         }
 

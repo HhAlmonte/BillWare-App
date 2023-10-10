@@ -1,18 +1,23 @@
 ﻿using BillWare.App.Enum;
+using BillWare.App.Intefaces;
 using BillWare.App.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Radzen;
 
 namespace BillWare.App.Pages.Inventory
 {
     [Authorize(Roles = "Administrator, Operator")]
     public partial class InventoryForm
     {
+        [Inject] private IInventoryService? _inventoryService { get; set; }
+        [Inject] private ICategoryService? _categoryService { get; set; }
+        [Inject] private DialogService? DialogService { get; set; }
+
         [Parameter] public FormModeEnum FormMode { get; set; }
+        [Parameter] public InventoryModel InventoryParameter { get; set; } = new InventoryModel();
 
-        [Parameter] public Models.InventoryModel InventoryParameter { get; set; } = new Models.InventoryModel();
-
-        private Models.InventoryModel Inventory = new Models.InventoryModel();
+        private InventoryModel Inventory = new InventoryModel();
         private List<CategoryModel> Categories { get; set; } = new List<CategoryModel>();
         private string ButtonTitle => FormMode == FormModeEnum.ADD ? "Agregar" : "Editar";
 
@@ -30,78 +35,48 @@ namespace BillWare.App.Pages.Inventory
 
         private async Task Add()
         {
-            try
+            var response = await _inventoryService!.CreateAsync(Inventory);
+
+            if(!response.IsSuccessFull)
             {
-                var response = await _inventoryService.CreateInvetory(Inventory);
-                var closeReturn = response != null ? true : false;
-                DialogService.Close(closeReturn);
+                await SweetAlertServices.ShowErrorAlert(response.Message, response.Details!);
+                return;
             }
-            catch (HttpRequestException ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
+
+            var closeReturn = response != null ? true : false;
+            DialogService!.Close(closeReturn);
         }
 
         private async Task Edit()
         {
-            try
+            var response = await _inventoryService!.UpdateAsync(Inventory);
+
+            if (!response.IsSuccessFull)
             {
-                var response = await _inventoryService.EditInventory(Inventory);
-                var closeReturn = response != null ? true : false;
-                DialogService.Close(closeReturn);
+                await SweetAlertServices.ShowErrorAlert(response.Message, response.Details!);
+                return;
             }
-            catch (HttpRequestException ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
+
+            var closeReturn = response != null ? true : false;
+            DialogService!.Close(closeReturn);
         }
 
         private async Task LoadCategories()
         {
-            try
-            {
-                var response = await _categoryService.GetCategoriesPaged(1, 100);
-                Categories = response.Items;
-                StateHasChanged();
-            }
-            catch (HttpRequestException ex)
-            {
-                Categories = new List<CategoryModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                Categories = new List<CategoryModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
+            var response = await _categoryService!.GetEntitiesPagedAsync(1, 100);
+
+            Categories = response.Data!.Items;
+
+            StateHasChanged();
         }
 
         private async Task LoadCategoriesWithSearch(string searchText)
         {
-            try
-            {
-                var response = await _categoryService.GetCategoriesPagedWithSearch(1, 100, searchText);
-                Categories = response.Items;
-                StateHasChanged();
-            }
-            catch (HttpRequestException ex)
-            {
-                Categories = new List<CategoryModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                Categories = new List<CategoryModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
+            var response = await _categoryService!.GetEntitiesPagedWithSearchAsync(1, 100, searchText);
+
+            Categories = response.Data!.Items;
+
+            StateHasChanged();
         }
 
         protected override async Task OnInitializedAsync()

@@ -1,17 +1,11 @@
 ﻿@page "/billing/index"
-@using BillWare.App.Enum;
-
-@inject IBillingItemService _billingItemService;
-@inject IBillingService _billingService;
-@inject IJSRuntime js;
-@inject DialogService DialogService;
 
 <h3>Facturación</h3>
 
 <hr />
 
 <RadzenButton Text="CREAR FACTURA" class="mb-3 mt-3" Style="background-color:#003053; color: #FFF" Click="@(async() => await OpenAddDialogForm())" />
-<RadzenTextBox Placeholder="Presiona ENTER al buscar" Change="@(async(e) => await GetWithSearch(e))" />
+<RadzenTextBox Placeholder="Presiona ENTER al buscar" Change="@(async(e) => await GetBillingsWithSearch(e))" />
 
 <RadzenDataGrid Data="Billings"
                 TItem="BillingModel"
@@ -19,7 +13,10 @@
                 AllowColumnResize="true"
                 ExpandMode="DataGridExpandMode.Single">
     <EmptyTemplate>
-        <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">No records to display.</p>
+        <div class="text-center">
+            <i style="font-size:3rem" class="text-muted bx bx-search-alt mt-2"></i>
+            <p class="text-muted">La lista está vacía.</p>
+        </div>
     </EmptyTemplate>
     <Template Context="billingItems">
         <RadzenCard Style="margin-bottom:20px">
@@ -31,7 +28,7 @@
             }
         </RadzenCard>
 
-        <RadzenDataGrid Data="@billingItems.BillingItems" AllowColumnResize Responsive TItem="BillingItemModel" AllowPaging PageSize="5" @ref="grid">
+        <RadzenDataGrid Data="@billingItems.BillingItems" AllowColumnResize Responsive TItem="BillingItemModel" AllowPaging PageSize="5">
             <Columns>
                 <RadzenDataGridColumn TItem="BillingItemModel" Property="Code" Title="Codigo" />
                 <RadzenDataGridColumn TItem="BillingItemModel" Property="Description" Title="Descripción" />
@@ -135,7 +132,7 @@
             <Template Context="actions">
                 @if(actions.BillingStatus == (int)BillingStatus.Pendiente)
                 {
-                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await Delete(actions.Id))" Visible="IsAdmin"/>
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async() => await DeleteBilling(actions.Id))" Visible="IsAdmin"/>
                     <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Click="@(async() => await OpenEditDialogForm(actions))" />
                 }
             </Template>

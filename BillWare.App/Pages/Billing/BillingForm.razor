@@ -1,11 +1,4 @@
-﻿@inject IBillingService _billingService;
-@inject IBillingItemService _billingItemService;
-@inject ICostumerService _costumerService;
-@inject IInventoryService _inventoryService;
-@inject IServicesService _billingServiceService;
-@inject DialogService DialogService;
-
-<RadzenTemplateForm Data="Billing" TItem="BillingModel" Submit="@(async() => await OnSubmit(1))">
+﻿<RadzenTemplateForm Data="Billing" TItem="BillingModel" Submit="@(async() => await OnSubmit(1))">
     <div class="row mb-2">
         <RadzenFieldset Text="Cliente">
             <div class="row">

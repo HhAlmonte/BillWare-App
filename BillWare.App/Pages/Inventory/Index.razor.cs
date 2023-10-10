@@ -1,6 +1,9 @@
 ﻿using BillWare.App.Common;
 using BillWare.App.Enum;
-using BillWare.Application.Billing.Models;
+using BillWare.App.Helpers;
+using BillWare.App.Intefaces;
+using BillWare.App.Models;
+using CurrieTechnologies.Razor.SweetAlert2;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Radzen;
@@ -10,10 +13,12 @@ namespace BillWare.App.Pages.Inventory
     [Authorize(Roles = "Administrator, Operator")]
     public partial class Index
     {
-        [Inject] LocalStorageHelper LocalStorageService { get; set; }
+        [Inject] private IInventoryService? _invetoryService { get; set; }
+        [Inject] private DialogService? DialogService { get; set; }
+        [Inject] BeamAuthenticationStateProviderHelper? AuthenticationStateProvider { get; set; }
 
-        private PaginationResult<Models.InventoryModel> BaseResponse { get; set; } = new PaginationResult<Models.InventoryModel>();
-        private List<Models.InventoryModel> Inventories { get; set; } = new List<Models.InventoryModel>();
+        private PaginationResult<InventoryModel> BaseResponse { get; set; } = new PaginationResult<InventoryModel>();
+        private List<InventoryModel> Inventories { get; set; } = new List<InventoryModel>();
         private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
 
         private bool IsLoading { get; set; } = false;
@@ -28,27 +33,21 @@ namespace BillWare.App.Pages.Inventory
 
         private async Task LoadData(int pageIndex, int pageSize = 5)
         {
-            try
+            Search = string.Empty;
+
+            var response = await _invetoryService!.GetEntitiesPagedAsync(pageIndex, pageSize);
+
+            if (!response.IsSuccessFull)
             {
-                Search = string.Empty;
-                BaseResponse = await _invetoryService.GetInventories(pageIndex, pageSize);
-                Inventories = BaseResponse.Items;
+                await SweetAlertServices.ShowToastAlert("Ocurrió un error", response.Message, SweetAlertIcon.Error);
+                return;
             }
-            catch (HttpRequestException ex)
-            {
-                BaseResponse = new PaginationResult<Models.InventoryModel>();
-                Inventories = new List<Models.InventoryModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                BaseResponse = new PaginationResult<Models.InventoryModel>();
-                Inventories = new List<Models.InventoryModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
+
+            BaseResponse = response.Data!;
+            Inventories = BaseResponse.Items;
         }
 
-        private async Task GetWithSearch(string search)
+        private async Task GetInventoriesWithSearch(string search)
         {
             IsFiltered = true;
             Search = search;
@@ -59,10 +58,15 @@ namespace BillWare.App.Pages.Inventory
                 await LoadData(PageIndex, PageSize);
                 return;
             }
-            else
+
+            var response = await _invetoryService!.GetEntitiesPagedWithSearchAsync(PageIndex, PageSize, search);
+
+            BaseResponse = response.Data!;
+            Inventories = BaseResponse.Items;
+
+            if (Inventories.Count <= 0)
             {
-                BaseResponse = await _invetoryService.GetInventoryWithSearch(search, PageIndex, PageSize);
-                Inventories = BaseResponse.Items;
+                await SweetAlertServices.ShowToastAlert("No hay registros", "No se encontraron registros", SweetAlertIcon.Warning);
             }
         }
 
@@ -70,11 +74,18 @@ namespace BillWare.App.Pages.Inventory
         {
             IsLoading = true;
 
-            IsAdmin = await LocalStorageService.GetItem(Configuration.ROLE) == "Administrator" ? true : false;
+            var authState = await AuthenticationStateProvider!.GetAuthenticationStateAsync();
+
+            IsAdmin = authState.User.IsInRole("Administrator");
+
             await LoadData(PageIndex);
 
-            await Task.Delay(1000);
             IsLoading = false;
+
+            if (BaseResponse.Items.Count <= 0)
+            {
+                await SweetAlertServices.ShowToastAlert("No hay registros", "No se encontraron registros", SweetAlertIcon.Warning);
+            }
         }
 
         private async Task PageIndexChanged(int pageIndex)
@@ -83,7 +94,7 @@ namespace BillWare.App.Pages.Inventory
 
             if (IsFiltered)
             {
-                await GetWithSearch(Search);
+                await GetInventoriesWithSearch(Search);
             }
             else
             {
@@ -97,7 +108,7 @@ namespace BillWare.App.Pages.Inventory
 
             if (IsFiltered)
             {
-                await GetWithSearch(Search);
+                await GetInventoriesWithSearch(Search);
             }
             else
             {
@@ -105,88 +116,84 @@ namespace BillWare.App.Pages.Inventory
             }
         }
 
-        private async Task Delete(int id)
+        private async Task DeleteInventory(int id)
         {
             var isConfirmed = await SweetAlertServices.ShowWarningAlert("¿Estás seguro de eliminar este registro?", "Verifica que este registro sea el que quieres eliminar");
 
             if (isConfirmed)
             {
-                try
+                var response = await _invetoryService!.DeleteAsync(id);
+
+                if (!response.IsSuccessFull)
                 {
-                    await _invetoryService.DeleteInventory(id);
-                    await SweetAlertServices.ShowSuccessAlert("Registro eliminado", "El registro se eliminó correctamente");
-                    if (Inventories.Count == 1 && PageIndex != 1)
-                    {
-                        PageIndex -= 1;
-                        await LoadData(PageIndex, PageSize);
-                    }
-                    else
-                    {
-                        await LoadData(PageIndex, PageSize);
-                    }
+                    await SweetAlertServices.ShowToastAlert(response.Message, response.Details!, SweetAlertIcon.Error);
+                    return;
                 }
-                catch (HttpRequestException ex)
+
+                if (Inventories.Count == 1 && PageIndex != 1)
                 {
-                    await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
+                    PageIndex -= 1;
+                    await LoadData(PageIndex, PageSize);
+
+                    return;
                 }
-                catch (Exception ex)
-                {
-                    await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-                }
-                finally
-                {
-                    await Task.Delay(1000);
-                    IsLoading = false;
-                }
+
+                await LoadData(PageIndex, PageSize);
+
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El servicio se ha eliminado correctamente. Se actualizará la lista en breve.", SweetAlertIcon.Success);
             }
         }
 
         private async Task OpenAddDialogForm(string title)
         {
-            var dialogResponse = await DialogService.OpenAsync<InventoryForm>(title,
-            new Dictionary<string, object>
-                {
-                    { "FormMode", FormModeEnum.ADD }
-                },
-            new DialogOptions
-                {
-                    Width = "auto"
-                });
+            var dialogResult = await DialogService!.OpenAsync<InventoryForm>(title,
+                      new Dictionary<string, object>
+                      {
+                          { "FormMode", FormModeEnum.ADD }
+                      },
+                      new DialogOptions
+                      {
+                          Width = "auto"
+                      });
 
-            var isLoad = dialogResponse == null ? false : true;
+            var isLoad = dialogResult == null ? false : true;
 
             if (isLoad)
             {
                 IsLoading = true;
+
                 await LoadData(PageIndex, PageSize);
 
-                await Task.Delay(1000);
                 IsLoading = false;
+
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El item se ha creado correctamente. Se actualizará en breve.", SweetAlertIcon.Success);
             }
         }
 
-        private async Task OpenEditDialogForm(string title, Models.InventoryModel inventory)
+        private async Task OpenEditDialogForm(string title, InventoryModel inventory)
         {
-            var action = await DialogService.OpenAsync<InventoryForm>(title,
-            new Dictionary<string, object>
-                {
-                    { "FormMode", FormModeEnum.EDIT },
-                    { "InventoryParameter", inventory }
-                },
-            new DialogOptions
-            {
-                Width = "auto",
-            });
+            var dialogResult = await DialogService!.OpenAsync<InventoryForm>(title,
+                      new Dictionary<string, object>
+                      {
+                          { "FormMode", FormModeEnum.EDIT },
+                          { "InventoryParameter", inventory }
+                      },
+                      new DialogOptions
+                      {
+                          Width = "auto",
+                      });
 
-            var isLoad = action == null ? false : true;
+            var isLoad = dialogResult == null ? false : true;
 
             if (isLoad)
             {
                 IsLoading = true;
+
                 await LoadData(PageIndex, PageSize);
 
-                await Task.Delay(1000);
                 IsLoading = false;
+
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El item se ha actualizado correctamente. Se actualizará la lista en breve.", SweetAlertIcon.Success);
             }
         }
     }

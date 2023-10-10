@@ -13,16 +13,9 @@ namespace BillWare.App.Services
 
         public async Task<HttpResponseMessage> DeleteBillingItem(int id)
         {
-            try
-            {
-                var request = await _httpClient.DeleteAsync($"BillingItem/DeleteBillingItem?id={id}");
+            var request = await _httpClient.DeleteAsync($"BillingItem/DeleteBillingItem?id={id}");
 
-                return request;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            return request;
         }
     }
 }

@@ -1,18 +1,23 @@
 ﻿using BillWare.App.Common;
 using BillWare.App.Enum;
+using BillWare.App.Helpers;
+using BillWare.App.Intefaces;
 using BillWare.App.Models;
-using BillWare.Application.Billing.Models;
+using CurrieTechnologies.Razor.SweetAlert2;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Radzen;
-using System;
 
 namespace BillWare.App.Pages.Category
 {
     [Authorize("Administrator, Operator")]
     public partial class Index
     {
-        [Inject] private LocalStorageHelper LocalStorageService { get; set; }
+        [Inject] private ICategoryService? _categoryService { get; set; }
+        [Inject] private DialogService? DialogService { get; set; }
+        [Inject] BeamAuthenticationStateProviderHelper? AuthenticationStateProvider { get; set; }
+
 
         private PaginationResult<CategoryModel> BaseResponse { get; set; } = new PaginationResult<CategoryModel>();
         private List<CategoryModel> Categories { get; set; } = new List<CategoryModel>();
@@ -31,80 +36,74 @@ namespace BillWare.App.Pages.Category
 
         private async Task OpenAddDialogForm(string title)
         {
-            var action = await DialogService.OpenAsync<CategoryForm>(title,
-            new Dictionary<string, object>
-            {
-            { "FormMode", FormModeEnum.ADD }
-            },
-            new DialogOptions
-            {
-                Width = "auto"
-            });
+            var dialogResult = await DialogService!.OpenAsync<CategoryForm>(title,
+                    new Dictionary<string, object>
+                    {
+                        { "FormMode", FormModeEnum.ADD }
+                    },
+                    new DialogOptions
+                    {
+                        Width = "auto"
+                    });
 
-            var isLoad = action == null ? false : true;
+            var isLoad = dialogResult == null ? false : true;
 
             if (isLoad)
             {
                 IsLoading = true;
+
                 await LoadData(PageIndex, PageSize);
 
-                await Task.Delay(1000);
                 IsLoading = false;
+
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "La categoría se ha creado correctamente. La se actualizará en breve.", SweetAlertIcon.Success);
             }
         }
 
         private async Task OpenEditDialogForm(string title, CategoryModel category)
         {
-            var action = await DialogService.OpenAsync<CategoryForm>(title,
-            new Dictionary<string, object>
+            var dialogResult = await DialogService!.OpenAsync<CategoryForm>(title,
+                    new Dictionary<string, object>
                         {
-                    { "FormMode", FormModeEnum.EDIT },
-                    { "CategoryParameter", category }
+                            { "FormMode", FormModeEnum.EDIT },
+                            { "CategoryParameter", category }
                         },
-            new DialogOptions
-            {
-                Width = "auto",
-            });
+                    new DialogOptions
+                    {
+                        Width = "auto",
+                    });
 
-            var isLoad = action == null ? false : true;
+            var isLoad = dialogResult == null ? false : true;
 
             if (isLoad)
             {
                 IsLoading = true;
+
                 await LoadData(PageIndex, PageSize);
 
-                await Task.Delay(1000);
                 IsLoading = false;
+
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "La categoría se ha modificado correctamente. La lista se actualizará en breve.", SweetAlertIcon.Success);
             }
         }
 
         private async Task LoadData(int pageIndex, int pageSize = 5)
         {
-            try
+            Search = string.Empty;
+
+            var response = await _categoryService!.GetEntitiesPagedAsync(pageIndex, pageSize);
+
+            if (!response.IsSuccessFull)
             {
-                Search = string.Empty;
-                BaseResponse = await _categoryService.GetCategoriesPaged(pageIndex, pageSize);
-                Categories = BaseResponse.Items;
+                await SweetAlertServices.ShowToastAlert("Ocurrió un error", response.Message, SweetAlertIcon.Error);
+                return;
             }
-            catch (HttpRequestException ex)
-            {
-                BaseResponse = new PaginationResult<CategoryModel>();
-                Categories = new List<CategoryModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                BaseResponse = new PaginationResult<CategoryModel>();
-                Categories = new List<CategoryModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            finally
-            {
-                IsLoading = false;
-            }
+
+            BaseResponse = response.Data!;
+            Categories = BaseResponse.Items;
         }
 
-        private async Task GetWithSearch(string search)
+        private async Task GetCategoriesWithSearch(string search)
         {
             IsFiltered = true;
             Search = search;
@@ -115,10 +114,15 @@ namespace BillWare.App.Pages.Category
                 await LoadData(PageIndex, PageSize);
                 return;
             }
-            else
+
+            var response = await _categoryService!.GetEntitiesPagedWithSearchAsync(PageIndex, PageSize, Search);
+
+            BaseResponse = response.Data!;
+            Categories = BaseResponse.Items;
+
+            if (Categories.Count <= 0)
             {
-                BaseResponse = await _categoryService.GetCategoriesPagedWithSearch(PageIndex, PageSize, search);
-                Categories = BaseResponse.Items;
+                await SweetAlertServices.ShowToastAlert("No hay registros", "No se encontraron registros", SweetAlertIcon.Warning);
             }
         }
 
@@ -128,7 +132,7 @@ namespace BillWare.App.Pages.Category
 
             if (IsFiltered)
             {
-                await GetWithSearch(Search);
+                await GetCategoriesWithSearch(Search);
             }
             else
             {
@@ -142,7 +146,7 @@ namespace BillWare.App.Pages.Category
 
             if (IsFiltered)
             {
-                await GetWithSearch(Search);
+                await GetCategoriesWithSearch(Search);
             }
             else
             {
@@ -150,36 +154,31 @@ namespace BillWare.App.Pages.Category
             }
         }
 
-        private async Task Delete(int id)
+        private async Task DeleteCategory(int id)
         {
             var isConfirmed = await SweetAlertServices.ShowWarningAlert("¿Estás seguro de eliminar este registro?", "Verifica que este registro sea el que quieres eliminar");
 
             if (isConfirmed)
             {
-                try
-                {
-                    await _categoryService.DeleteCategory(id);
+                var response = await _categoryService!.DeleteAsync(id);
 
-                    if (Categories.Count == 1 && PageIndex != 1)
-                    {
-                        PageIndex -= 1;
-                        await LoadData(PageIndex, PageSize);
-                    }
-                    else
-                    {
-                        await LoadData(PageIndex, PageSize);
-                    }
+                if (!response.IsSuccessFull)
+                {
+                    await SweetAlertServices.ShowToastAlert(response.Message, response.Details!, SweetAlertIcon.Error);
+                    return;
+                }
 
-                    await SweetAlertServices.ShowSuccessAlert("Registro eliminado", "El registro se eliminó correctamente");
-                }
-                catch (HttpRequestException ex)
+                if (Categories.Count == 1 && PageIndex != 1)
                 {
-                    await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
+                    PageIndex -= 1;
+                    await LoadData(PageIndex, PageSize);
+
+                    return;
                 }
-                catch (Exception ex)
-                {
-                    await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-                }
+
+                await LoadData(PageIndex, PageSize);
+
+                await SweetAlertServices.ShowToastAlert("Registro eliminado", "La categoría se eliminó correctamente", SweetAlertIcon.Success);
             }
         }
 
@@ -187,11 +186,18 @@ namespace BillWare.App.Pages.Category
         {
             IsLoading = true;
 
-            IsAdmin = await LocalStorageService.GetItem(Configuration.ROLE) == "Administrator" ? true : false;
+            var authState = await AuthenticationStateProvider!.GetAuthenticationStateAsync();
+
+            IsAdmin = authState.User.IsInRole("Administrator");
+
             await LoadData(PageIndex);
 
-            await Task.Delay(1000);
             IsLoading = false;
+
+            if (BaseResponse.Items.Count <= 0)
+            {
+                await SweetAlertServices.ShowToastAlert("No hay registros", "No se encontraron registros", SweetAlertIcon.Warning);
+            }
         }
     }
 }

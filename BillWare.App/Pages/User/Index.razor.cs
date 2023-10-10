@@ -1,7 +1,10 @@
 ﻿using BillWare.App.Common;
 using BillWare.App.Enum;
+using BillWare.App.Intefaces;
 using BillWare.App.Models;
+using CurrieTechnologies.Razor.SweetAlert2;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components;
 using Radzen;
 
 namespace BillWare.App.Pages.User
@@ -9,6 +12,9 @@ namespace BillWare.App.Pages.User
     [Authorize("Administrator")]
     public partial class Index
     {
+        [Inject] private IUserService? _userService { get; set; }
+        [Inject] private DialogService? DialogService { get; set; }
+
         private PaginationResult<UserModel> BaseResponse = new PaginationResult<UserModel>();
         private List<UserModel> Users = new List<UserModel>();
 
@@ -22,115 +28,106 @@ namespace BillWare.App.Pages.User
 
         private async Task OpenAddDialogForm(string title)
         {
-            var action = await DialogService.OpenAsync<UserForm>(title,
-            options: new DialogOptions
-            {
-                Width = "700px",
-                Draggable = true,
-            });
+            var dialogResult = await DialogService!.OpenAsync<UserForm>(title,
+                      options: new DialogOptions
+                      {
+                          Width = "700px",
+                          Draggable = true,
+                      });
 
-            var isLoad = action == null ? false : true;
+            var isLoad = dialogResult == null ? false : true;
 
             if (isLoad)
             {
                 IsLoading = true;
+
                 await LoadData(PageIndex, PageSize);
 
-                await Task.Delay(1000);
                 IsLoading = false;
+
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El usuario se ha creado correctamente. La lista se actualizará en breve.", SweetAlertIcon.Success);
             }
         }
         private async Task OpenEditDialogForm(UserModel user)
         {
-            var action = await DialogService.OpenAsync<UserForm>("Editar usuario",
-            parameters: new Dictionary<string, object>() { { "UserParameter", user }, { "FormMode", FormModeEnum.EDIT } },
-            options: new DialogOptions
-            {
-                Width = "700px",
-                Draggable = true,
-            });
+            var dialogResult = await DialogService!.OpenAsync<UserForm>("Editar usuario",
+                    parameters: new Dictionary<string, object>()
+                    {
+                        { "UserParameter", user },
+                        { "FormMode", FormModeEnum.EDIT }
+                    },
+                    options: new DialogOptions
+                    {
+                        Width = "700px",
+                        Draggable = true,
+                    });
 
-            var isLoad = action == null ? false : true;
+            var isLoad = dialogResult == null ? false : true;
 
             if (isLoad)
             {
                 IsLoading = true;
+
                 await LoadData(PageIndex, PageSize);
 
-                await Task.Delay(1000);
                 IsLoading = false;
+
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El cliente se ha actualizado correctamente. La lista se actualizará en breve.", SweetAlertIcon.Success);
             }
-
         }
-
-
         private async Task LoadData(int pageIndex, int pageSize = 5)
         {
-            try
-            {
-                BaseResponse = await _userService.GetUsersPaged(pageIndex, pageSize);
-                Users = BaseResponse.Items;
-            }
-            catch (HttpRequestException ex)
-            {
-                BaseResponse = new PaginationResult<UserModel>();
-                Users = new List<UserModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                BaseResponse = new PaginationResult<UserModel>();
-                Users = new List<UserModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
+            var response = await _userService!.GetEntitiesPagedAsync(pageIndex, pageSize);
 
+            if (!response.IsSuccessFull)
+            {
+                await SweetAlertServices.ShowToastAlert("Ocurrió un error", response.Message, SweetAlertIcon.Error);
+                return;
+            }
+
+            BaseResponse = response.Data!;
+            Users = BaseResponse.Items;
+        }
         private async Task DeleteUser(string id)
         {
-            var result = await SweetAlertServices.ShowWarningAlert("¿Está seguro de eliminar este usuario?", "Esta acción no se puede deshacer");
+            var isConfirmed = await SweetAlertServices.ShowWarningAlert("¿Está seguro de eliminar este usuario?", "Esta acción no se puede deshacer");
 
-            if (result)
+            if (isConfirmed)
             {
-                try
+                var response = await _userService!.DeleteAsync(id);
+
+                if (!response.IsSuccessFull)
                 {
-                    await _userService.DeleteUser(id);
+                    await SweetAlertServices.ShowToastAlert(response.Message, response.Details!, SweetAlertIcon.Error);
+                    return;
+                }
 
-                    await SweetAlertServices.ShowSuccessAlert("Usuario eliminado", "El usuario se eliminó correctamente");
-
+                if (Users.Count == 1 && PageIndex != 1)
+                {
+                    PageIndex -= 1;
                     await LoadData(PageIndex, PageSize);
+                    return;
                 }
-                catch (HttpRequestException ex)
-                {
-                    await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-                }
-                catch (Exception ex)
-                {
-                    await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-                }
+
+                await LoadData(PageIndex, PageSize);
+
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El usuario se ha eliminado correctamente. La lista se actualizará en breve.");
             }
         }
-
         protected override async Task OnInitializedAsync()
         {
             IsLoading = true;
+
             await LoadData(PageIndex);
 
-            await Task.Delay(1000);
             IsLoading = false;
         }
-
-
         private async Task PageIndexChanged(int pageIndex)
         {
             PageIndex = pageIndex + 1;
 
             await LoadData(PageIndex, PageSize);
         }
-
         private async Task PageSizeChanged(int pageSize)
         {
             PageSize = pageSize;

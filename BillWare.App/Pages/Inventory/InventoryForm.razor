@@ -1,8 +1,4 @@
-﻿@inject IInventoryService _inventoryService;
-@inject ICategoryService _categoryService;
-@inject DialogService DialogService
-
-<RadzenTemplateForm TItem="InventoryModel"
+﻿<RadzenTemplateForm TItem="InventoryModel"
                     Data="@Inventory"   
                     Submit="OnSubmit">
     <div class="row">
@@ -25,7 +21,11 @@
         <div class="col-md-6">
             <div class="form-group">
                 <RadzenLabel Text="Precio"></RadzenLabel>
-                <RadzenNumeric Name="Price" @bind-Value="@Inventory.Price" class="form-control" Placeholder="Introduce el precio" />
+                <RadzenNumeric Name="Price" 
+                               @bind-Value="@Inventory.Price" 
+                               class="form-control" 
+                               Placeholder="Introduce el precio"
+                               Format="C"/>
                 <RadzenRequiredValidator Component="Price" Text="Introducir precio" Popup="true" Style="position: absolute" />
             </div>
             <div class="form-group">

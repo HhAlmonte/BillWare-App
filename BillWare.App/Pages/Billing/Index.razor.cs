@@ -1,26 +1,30 @@
-﻿using BillWare.Application.Billing.Models;
-using Radzen.Blazor;
-using Radzen;
+﻿using BillWare.App.Common;
+using BillWare.App.Enum;
+using BillWare.App.Helpers;
+using BillWare.App.Intefaces;
+using BillWare.Application.Billing.Models;
+using CurrieTechnologies.Razor.SweetAlert2;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
-using BillWare.App.Services;
-using BillWare.App.Enum;
-using BillWare.App.Common;
-using BillWare.App.Helpers;
+using Microsoft.JSInterop;
+using Radzen;
+using Radzen.Blazor;
 
 namespace BillWare.App.Pages.Billing
 {
     [Authorize(Roles = "Administrator, Operator")]
     public partial class Index
     {
-        [Inject] LocalStorageHelper LocalStorageService { get; set; }
-        [Inject] PdfConversionHelper pdfConversionService { get; set; }
+        [Inject] private IBillingItemService? _billingItemService { get; set; }
+        [Inject] private IBillingService? _billingService { get; set; }
+        [Inject] private IJSRuntime? js { get; set; }
+        [Inject] private DialogService? DialogService { get; set; }
+        [Inject] BeamAuthenticationStateProviderHelper? BeamAuthenticationStateProviderHelper { get; set; }
+        [Inject] PdfConversionHelper? pdfConversionService { get; set; }
 
         private PaginationResult<BillingModel> BaseResponse { get; set; } = new PaginationResult<BillingModel>();
         private List<BillingModel> Billings { get; set; } = new List<BillingModel>();
         private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
-
-        private RadzenDataGrid<BillingItemModel> grid;
 
         private bool IsLoading { get; set; } = false;
         private bool IsFiltered { get; set; } = false;
@@ -34,60 +38,32 @@ namespace BillWare.App.Pages.Billing
 
         private async Task LoadData(int pageIndex, int pageSize = 5)
         {
-            try
-            {
-                var response = await _billingService.GetEntitiesPagedAsync(pageIndex, pageSize);
-                BaseResponse = response.Data;
-                Billings = BaseResponse.Items;
-            }
-            catch (HttpRequestException ex)
-            {
-                BaseResponse = new PaginationResult<BillingModel>();
-                Billings = new List<BillingModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                BaseResponse = new PaginationResult<BillingModel>();
-                Billings = new List<BillingModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            finally
-            {
-                IsLoading = false;
-            }
+            Search = string.Empty;
+
+            var response = await _billingService!.GetEntitiesPagedAsync(pageIndex, pageSize);
+
+            BaseResponse = response.Data!;
+            Billings = BaseResponse.Items;
         }
-        private async Task GetWithSearch(string search)
+        private async Task GetBillingsWithSearch(string search)
         {
             IsFiltered = true;
             Search = search;
 
-            try
+            if (Search == "")
             {
-                if (Search == "")
-                {
-                    IsFiltered = false;
-                    await LoadData(PageIndex, PageSize);
-                    return;
-                }
-                else
-                {
-                    var response = await _billingService.GetEntitiesPagedWithSearchAsync(PageIndex, PageSize, Search);
-                    BaseResponse = response!.Data;
-                    Billings = BaseResponse!.Items;
-                }
+                IsFiltered = false;
+                await LoadData(PageIndex, PageSize);
+                return;
             }
-            catch (HttpRequestException ex)
+
+            var response = await _billingService!.GetEntitiesPagedWithSearchAsync(PageIndex, PageSize, Search);
+            BaseResponse = response.Data!;
+            Billings = BaseResponse.Items;
+
+            if (Billings.Count <= 0)
             {
-                BaseResponse = new PaginationResult<BillingModel>();
-                Billings = new List<BillingModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                BaseResponse = new PaginationResult<BillingModel>();
-                Billings = new List<BillingModel>();
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
+                await SweetAlertServices.ShowToastAlert("No hay registros", "No se encontraron registros", SweetAlertIcon.Warning);
             }
         }
 
@@ -97,7 +73,7 @@ namespace BillWare.App.Pages.Billing
 
             if (IsFiltered)
             {
-                await GetWithSearch(Search);
+                await GetBillingsWithSearch(Search);
             }
             else
             {
@@ -110,7 +86,7 @@ namespace BillWare.App.Pages.Billing
 
             if (IsFiltered)
             {
-                await GetWithSearch(Search);
+                await GetBillingsWithSearch(Search);
             }
             else
             {
@@ -118,28 +94,29 @@ namespace BillWare.App.Pages.Billing
             }
         }
 
-        private async Task Delete(int? id)
+        private async Task DeleteBilling(int? id)
         {
             var isConfirm = await SweetAlertServices.ShowWarningAlert("¿Está seguro de eliminar este registro?", "Confirma de que este sea el registro que deseas eliminar");
 
             if (isConfirm)
             {
-                try
-                {
-                    var billingDeleted = await _billingService.DeleteAsync((int)id!);
+                var response = await _billingService!.DeleteAsync((int)id!);
 
+                if (!response.IsSuccessFull)
+                {
+                    await SweetAlertServices.ShowToastAlert(response.Message, response.Details!, SweetAlertIcon.Error);
+                    return;
+                }
+
+                if (Billings.Count == 1 && PageIndex != 1)
+                {
+                    PageIndex -= 1;
                     await LoadData(PageIndex, PageSize);
+                    return;
+                }
 
-                    await SweetAlertServices.ShowSuccessAlert("Registro eliminado", "El registro se ha eliminado correctamente");
-                }
-                catch (HttpRequestException ex)
-                {
-                    await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-                }
-                catch (Exception ex)
-                {
-                    await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-                }
+                await LoadData(PageIndex, PageSize);
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "La factura se ha eliminado correctamente. La lista se actualizará en breve.", SweetAlertIcon.Success);
             }
         }
         private async Task DeleteBillingItem(int? id)
@@ -148,26 +125,16 @@ namespace BillWare.App.Pages.Billing
 
             if (isConfirm)
             {
-                try
-                {
-                    var billingItemDeleted = await _billingItemService.DeleteBillingItem((int)id!);
+                var response = await _billingItemService!.DeleteBillingItem((int)id!);
 
-                    await LoadData(PageIndex, PageSize);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return;
+                }
 
-                    await SweetAlertServices.ShowSuccessAlert("Registro eliminado", "El registro se ha eliminado correctamente");
-                }
-                catch (HttpRequestException ex)
-                {
-                    BaseResponse = new PaginationResult<BillingModel>();
-                    Billings = new List<BillingModel>();
-                    await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-                }
-                catch (Exception ex)
-                {
-                    BaseResponse = new PaginationResult<BillingModel>();
-                    Billings = new List<BillingModel>();
-                    await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-                }
+                await LoadData(PageIndex, PageSize);
+
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "El item se ha eliminado correctamente. La lista se actualizará en breve.", SweetAlertIcon.Success);
             }
         }
 
@@ -175,33 +142,21 @@ namespace BillWare.App.Pages.Billing
         {
             billing.BillingStatus = (int)BillingStatus.Pagado;
 
-            try
+            var htmlContent = InvoiceToHtml(billing);
+
+            billing.InvoiceDocument = await pdfConversionService!.ConvertHtmlToPdf(htmlContent);
+
+            await _billingService!.UpdateAsync(billing);
+
+            var printInvoice = await SweetAlertServices.ShowWarningAlert("¿Desea imprimir la factura?", "Se abrirá una nueva ventana para imprimir la factura.");
+
+            if (printInvoice)
             {
-
-                var htmlContent = InvoiceToHtml(billing);
-                
-
-                billing.InvoiceDocument = await pdfConversionService.ConvertHtmlToPdf(htmlContent);
-
-                var invoiceUpdated = await _billingService.UpdateAsync(billing);
-                var printInvoice = await SweetAlertServices.ShowWarningAlert("¿Desea imprimir la factura?", "Se abrirá una nueva ventana para imprimir la factura.");
-                
-                if (printInvoice)
-                {
-                    await JSRuntimeInvoke.PrintHtml(js, htmlContent);
-                }
-
-                await SweetAlertServices.ShowSuccessAlert("Proceso de facturació completado exitosamente", $"La factura se ha pagado correctamente. Se envió la factura al siguiente correo: hbalmontess272@gmail.com");
-                await LoadData(PageIndex, PageSize);
+                await JSRuntimeInvoke.PrintHtml(js!, htmlContent);
             }
-            catch (HttpRequestException ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
+
+            await SweetAlertServices.ShowToastAlert("Proceso completado", $"La factura se ha pagado correctamente. Se envió la factura al siguiente correo: hbalmontess272@gmail.com");
+            await LoadData(PageIndex, PageSize);
         }
         private string InvoiceToHtml(BillingModel invoice)
         {
@@ -372,83 +327,54 @@ namespace BillWare.App.Pages.Billing
 
         private async Task OpenAddDialogForm()
         {
-            var dialogResponse = await DialogService.OpenAsync<BillingForm>("Crear Factura"
-                            , options: new DialogOptions
-                            {
-                                Width = "1080px",
-                                Height = "auto",
-                                Draggable = true
-                            });
+            var dialogResult = await DialogService!.OpenAsync<BillingForm>("Crear Factura"
+                      ,options: new DialogOptions
+                      {
+                          Width = "1080px",
+                          Height = "auto",
+                          Draggable = true
+                      });
 
-            if(dialogResponse != null)
+            if (dialogResult != null)
             {
-                try
-                {
-                    var billingResult = dialogResponse as BillingModel;
+                var billingResult = dialogResult as BillingModel;
 
-                    if (billingResult.BillingStatus == 2)
-                    {
-                        await LoadData(PageIndex, PageSize);
-                        await PrintInvoice(billingResult);
-                    }
-                    else
-                    {
-                        await LoadData(PageIndex, PageSize);
-                    }
-                }
-                catch (HttpRequestException ex)
+                if (billingResult!.BillingStatus == 2)
                 {
-                    BaseResponse = new PaginationResult<BillingModel>();
-                    Billings = new List<BillingModel>();
-                    await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
+                    await LoadData(PageIndex, PageSize);
+                    await PrintInvoice(billingResult);
+                    return;
                 }
-                catch (Exception ex)
-                {
-                    BaseResponse = new PaginationResult<BillingModel>();
-                    Billings = new List<BillingModel>();
-                    await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-                }
+
+                await LoadData(PageIndex, PageSize);
+
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "La factura se ha creado correctamente. La lista se actualizará en breve.", SweetAlertIcon.Success);
             }
         }
         private async Task OpenEditDialogForm(BillingModel billing)
         {
-            var dialogResponse = await DialogService.OpenAsync<BillingForm>("Editar Factura"
-                            , parameters: new Dictionary<string, object>() { { "BillingParameter", billing }, { "FormMode", FormModeEnum.EDIT } }
-                            , options: new DialogOptions
-                            {
-                                Width = "1080px",
-                                Height = "auto",
-                                Draggable = true
-                            });
+            var dialogResponse = await DialogService!.OpenAsync<BillingForm>("Editar Factura"
+                      , parameters: new Dictionary<string, object>() { { "BillingParameter", billing }, { "FormMode", FormModeEnum.EDIT } }
+                      , options: new DialogOptions
+                      {
+                          Width = "1080px",
+                          Height = "auto",
+                          Draggable = true
+                      });
 
             if (dialogResponse != null)
             {
-                try
-                {
-                    var billingResult = dialogResponse as BillingModel;
+                var billingResult = dialogResponse as BillingModel;
 
-                    if (billingResult.BillingStatus == 2)
-                    {
-                        await LoadData(PageIndex, PageSize);
-                        await PrintInvoice(billingResult);
-                    }
-                    else
-                    {
-                        await LoadData(PageIndex, PageSize);
-                    }
-                }
-                catch (HttpRequestException ex)
+                if (billingResult!.BillingStatus == 2)
                 {
-                    BaseResponse = new PaginationResult<BillingModel>();
-                    Billings = new List<BillingModel>();
-                    await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
+                    await LoadData(PageIndex, PageSize);
+                    await PrintInvoice(billingResult);
+                    return;
                 }
-                catch (Exception ex)
-                {
-                    BaseResponse = new PaginationResult<BillingModel>();
-                    Billings = new List<BillingModel>();
-                    await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-                }
+
+                await LoadData(PageIndex, PageSize);
+                await SweetAlertServices.ShowToastAlert("Operación exitosa", "La factura se ha actualizado correctamente. La lista se actualizará en breve.", SweetAlertIcon.Success);
             }
         }
 
@@ -456,10 +382,12 @@ namespace BillWare.App.Pages.Billing
         {
             IsLoading = true;
 
-            IsAdmin = await LocalStorageService.GetItem(Configuration.ROLE) == "Administrator" ? true : false;
+            var userAuth = await BeamAuthenticationStateProviderHelper!.GetAuthenticationStateAsync();
+
+            IsAdmin = userAuth.User.IsInRole("Administrator");
+
             await LoadData(PageIndex);
 
-            await Task.Delay(1000);
             IsLoading = false;
         }
     }

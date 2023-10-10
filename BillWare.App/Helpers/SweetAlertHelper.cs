@@ -20,7 +20,7 @@ public static class SweetAlertServices
             Toast = true,
             Position = SweetAlertPosition.TopEnd,
             ShowConfirmButton = false,
-            Timer = 6000
+            Timer = 4000
         });
     }
 

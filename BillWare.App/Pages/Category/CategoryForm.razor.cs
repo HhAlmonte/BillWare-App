@@ -1,14 +1,18 @@
 ﻿using BillWare.App.Enum;
+using BillWare.App.Intefaces;
 using BillWare.App.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
-using System;
+using Radzen;
 
 namespace BillWare.App.Pages.Category
 {
     [Authorize("Administrator, Operator")]
     public partial class CategoryForm
     {
+        [Inject] private ICategoryService? _categoryService { get; set; }
+        [Inject] private DialogService? DialogService { get; set; }
+
         [Parameter] public FormModeEnum FormMode { get; set; }
         [Parameter] public CategoryModel CategoryParameter { get; set; } = new CategoryModel();
 
@@ -31,42 +35,32 @@ namespace BillWare.App.Pages.Category
 
         private async Task Add()
         {
-            try
-            {
-                var response = await _categoryService.CreateCategory(Category);
+            var response = await _categoryService!.CreateAsync(Category);
 
-                var closeReturn = response != null ? true : false;
+            if (!response.IsSuccessFull)
+            {
+                await SweetAlertServices.ShowErrorAlert(response.Message, response.Details!);
+                return;
+            }
 
-                DialogService.Close(response);
-            }
-            catch (HttpRequestException ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
+            var closeReturn = response != null ? true : false;
+
+            DialogService!.Close(closeReturn);
         }
 
         private async Task Edit()
         {
-            try
-            {
-                var response = await _categoryService.EditCategory(Category);
+            var response = await _categoryService!.UpdateAsync(Category);
 
-                var closeReturn = response != null ? true : false;
+            var closeReturn = response != null ? true : false;
 
-                DialogService.Close(response);
-            }
-            catch (HttpRequestException ex)
+            if (!response.IsSuccessFull)
             {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
+                await SweetAlertServices.ShowErrorAlert(response.Message, response.Details!);
+                return;
             }
-            catch (Exception ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ocurrió un error", ex.Message);
-            }
+
+            DialogService?.Close(closeReturn);
         }
 
         protected override void OnInitialized()

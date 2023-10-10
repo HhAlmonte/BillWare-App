@@ -37,7 +37,7 @@ namespace BillWare.App.Pages.Service
         {
             var response = await _billingService!.CreateAsync(BillingService);
 
-            if (!response.IsSuccessFul)
+            if (!response.IsSuccessFull)
             {
                 await SweetAlertServices.ShowErrorAlert(response.Message, response.Details!);
                 return;
@@ -52,7 +52,7 @@ namespace BillWare.App.Pages.Service
         {
             var response = await _billingService!.UpdateAsync(BillingService);
 
-            if (!response.IsSuccessFul)
+            if (!response.IsSuccessFull)
             {
                 await SweetAlertServices.ShowErrorAlert(response.Message, response.Details!);
                 return;

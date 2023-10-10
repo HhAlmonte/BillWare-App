@@ -53,7 +53,7 @@ namespace BillWare.App.Services
 
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.DeleteAsync($"{_controllerName}/Delete/id={identity}");
+                var response = await _httpClient.DeleteAsync($"{_controllerName}/Delete/{identity}");
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -62,9 +62,12 @@ namespace BillWare.App.Services
                     return BaseResponse<T>.BuildErrorResponse(errorResponse!);
                 }
 
-                var result = await response.Content.ReadFromJsonAsync<BaseResponse<T>>();
+                var result = await response.Content.ReadFromJsonAsync<bool>();
 
-                return BaseResponse<T>.BuildSuccessResponse(result!.Data!);
+                return new BaseResponse<T>
+                {
+                    IsSuccessFull = result!
+                };
             }
             catch (HttpRequestException ex)
             {
