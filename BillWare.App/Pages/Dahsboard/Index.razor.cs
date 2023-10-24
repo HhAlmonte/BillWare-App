@@ -3,6 +3,7 @@ using BillWare.App.Intefaces;
 using BillWare.App.Models;
 using BillWare.Application.Billing.Models;
 using BlazorBootstrap;
+using CurrieTechnologies.Razor.SweetAlert2;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Radzen.Blazor;
@@ -38,6 +39,12 @@ namespace BillWare.App.Pages.Dahsboard
         private async Task LoadData(int pageIndex, int pageSize = 5)
         {
             var response = await _billingService.GetEntitiesPagedAsync(pageIndex, pageSize);
+
+            if (!response.IsSuccessFull)
+            {
+                await SweetAlertServices.ShowToastAlert(response.Message, response.Details!, SweetAlertIcon.Error);
+                return;
+            }
 
             BaseResponse = response.Data!;
             Billings = BaseResponse.Items;
@@ -155,26 +162,15 @@ namespace BillWare.App.Pages.Dahsboard
         {
             IsLoading = true;
 
-            try
-            {
-                var loadDataTask = LoadData(PageIndex);
-                var loadSalesLast30DaysTask = LoadSalesLast30Days();
-                var loadSalesLast12MonthTask = LoadSalesLast12Month();
-                var loadDataGridDetailsTask = LoadDataGridDetails();
+            var loadDataTask = LoadData(PageIndex);
+            var loadSalesLast30DaysTask = LoadSalesLast30Days();
+            var loadSalesLast12MonthTask = LoadSalesLast12Month();
+            var loadDataGridDetailsTask = LoadDataGridDetails();
 
-                await Task.WhenAll(loadDataTask, loadSalesLast30DaysTask, loadSalesLast12MonthTask, loadDataGridDetailsTask);
+            await Task.WhenAll(loadDataTask, loadSalesLast30DaysTask, loadSalesLast12MonthTask, loadDataGridDetailsTask);
 
-                IsLoading = false;
-                StateHasChanged();
-            }
-            catch (Exception ex)
-            {
-                await SweetAlertServices.ShowErrorAlert("Ha ocurrido un error",ex.Message);
-            }
-            finally
-            {
-                IsLoading = false;
-            }
+            IsLoading = false;
+            StateHasChanged();
         }
     }
 }

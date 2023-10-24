@@ -32,6 +32,7 @@ var httpClient = new HttpClient()
 
 builder.Services.AddSingleton(httpClient);
 
+builder.Services.AddScoped<IHoraExtraService, HoraExtraService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IBillingService, BillingService>();
 builder.Services.AddScoped<IServicesService, BillingServiceService>();

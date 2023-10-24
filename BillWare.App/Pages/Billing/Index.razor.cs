@@ -20,7 +20,6 @@ namespace BillWare.App.Pages.Billing
         [Inject] private IJSRuntime? js { get; set; }
         [Inject] private DialogService? DialogService { get; set; }
         [Inject] BeamAuthenticationStateProviderHelper? BeamAuthenticationStateProviderHelper { get; set; }
-        [Inject] PdfConversionHelper? pdfConversionService { get; set; }
 
         private PaginationResult<BillingModel> BaseResponse { get; set; } = new PaginationResult<BillingModel>();
         private List<BillingModel> Billings { get; set; } = new List<BillingModel>();
@@ -143,8 +142,6 @@ namespace BillWare.App.Pages.Billing
             billing.BillingStatus = (int)BillingStatus.Pagado;
 
             var htmlContent = InvoiceToHtml(billing);
-
-            billing.InvoiceDocument = await pdfConversionService!.ConvertHtmlToPdf(htmlContent);
 
             await _billingService!.UpdateAsync(billing);
 

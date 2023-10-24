@@ -20,7 +20,7 @@
     </EmptyTemplate>
     <Template Context="billingItems">
         <RadzenCard Style="margin-bottom:20px">
-            productos registrados por el cliente: <b>@billingItems.FullName (@billingItems.BillingItems.Count())   </b>
+            productos registrados por el cliente: <b>@billingItems.Costumer!.FullName (@billingItems.BillingItems.Count())   </b>
 
             @if(billingItems.BillingStatus == (int)BillingStatus.Pendiente)
             {
@@ -68,7 +68,7 @@
         </RadzenDataGridColumn>
 
         <RadzenDataGridColumn TItem="BillingModel"
-                              Property="FullName"
+                              Property="Costumer.FullName"
                               Title="Cliente">
         </RadzenDataGridColumn>
 

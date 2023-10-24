@@ -24,10 +24,10 @@ namespace BillWare.App.Pages.Billing
         [Parameter] public BillingModel BillingParameter { get; set; } = new BillingModel();
         [Parameter] public FormModeEnum FormMode { get; set; } = FormModeEnum.ADD;
 
-
+        private CostumerModel Costumer = new CostumerModel();
         private BillingModel Billing = new BillingModel()
         {
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.Now,
         };
         private RadzenDataGrid<BillingItemModel>? grid;
         private InvoiceNumberGenerator InvoiceNumberGenerator = new InvoiceNumberGenerator("FACT");
@@ -45,7 +45,7 @@ namespace BillWare.App.Pages.Billing
                 Id = 2
             },
         };
-
+        private List<CostumerModel> Costumers { get; set; } = new List<CostumerModel>();
         private List<BillingItemModel> BillingItems { get; set; } = new List<BillingItemModel>();
 
         private List<BillingItemModel> BillingInventoriesItems { get; set; } = new List<BillingItemModel>();
@@ -84,6 +84,11 @@ namespace BillWare.App.Pages.Billing
             StateHasChanged();
         }
 
+        private void OnInputChange(object e)
+        {
+            Console.Write($"hola {e}");
+        }
+
         private async Task OpenQuantityormDialog(int quantity, int code)
         {
             var dialogResponse = await DialogService!.OpenAsync<QuantityForm>("Modificar cantidad"
@@ -120,22 +125,11 @@ namespace BillWare.App.Pages.Billing
 
         }
 
-        private async Task GetCostumer()
+        private async Task OnLoadData(LoadDataArgs args)
         {
-            if (string.IsNullOrEmpty(CostumerId))
-            {
-                await SweetAlertServices.ShowErrorAlert("Codigo invalido", "Primero debe ingresar un código");
-                return;
-            }
+            var response = await _costumerService!.GetEntitiesPagedWithSearchAsync(1, 50, args.Filter);
 
-            int costumerId = Convert.ToInt32(CostumerId);
-
-            var costumer = await _costumerService!.GetEntityById(costumerId);
-
-            Billing.FullName = costumer.Data!.FullName;
-            Billing.Address = costumer.Data.Address;
-            Billing.Phone = costumer.Data.Phone;
-            Billing.NumberId = costumer.Data.NumberId;
+            Costumers = response.Data!.Items;
 
             StateHasChanged();
         }
@@ -265,16 +259,29 @@ namespace BillWare.App.Pages.Billing
             StateHasChanged(); ;
         }
 
-        private async Task Add(int billingStatus)
+
+        private async Task CreateBilling(int billingStatus)
         {
+            var evaluateCostumer = CostumerId == null || Convert.ToInt32(CostumerId) == 0;
+
+            if(evaluateCostumer)
+            {
+            }
+
             Billing.SellerName = SellerName!;
             Billing.BillingStatus = billingStatus;
 
-            var billingCreated = await _billingService!.CreateAsync(Billing);
-            await SweetAlertServices.ShowSuccessAlert("Factura creada", "La factura se creó correctamente");
-            DialogService!.Close(billingCreated);
+            var response = await _billingService!.CreateAsync(Billing);
+
+            if (!response.IsSuccessFull)
+            {
+                await SweetAlertServices.ShowErrorAlert(response.Message, response.Details!);
+                return;
+            }
+
+            DialogService!.Close(response.Data);
         }
-        private async Task Edit(int billingStatus)
+        private async Task ModifyBilling(int billingStatus)
         {
             Billing.SellerName = SellerName!;
             Billing.BillingStatus = billingStatus;
@@ -289,11 +296,11 @@ namespace BillWare.App.Pages.Billing
 
             if (FormMode == FormModeEnum.ADD)
             {
-                await Add(billingStatus);
+                await CreateBilling(billingStatus);
             }
             else
             {
-                await Edit(billingStatus);
+                await ModifyBilling(billingStatus);
             }
         }
 
@@ -337,11 +344,5 @@ namespace BillWare.App.Pages.Billing
                 StateHasChanged();
             }
         }
-    }
-
-    public class PaymentMethod
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
     }
 }

@@ -1,0 +1,77 @@
+﻿@page "/horaExtra/index"
+
+<h3>Solicitud hora extra</h3>
+
+<hr />
+
+<RadzenButton Text="Registrar nueva solicitud" class="mb-3 mt-3" Style="background-color:#003053; color: #FFF" Click="@(async()=> await OpenAddDialogForm())" />
+
+
+<RadzenDataGrid Data="HoraExtras"
+                TItem="HoraExtra"
+                AllowPaging>
+    <EmptyTemplate>
+        <div class="text-center">
+            <i style="font-size:3rem" class="text-muted bx bx-search-alt mt-2"></i>
+            <p class="text-muted">La lista está vacía.</p>
+        </div>
+    </EmptyTemplate>
+
+    <Columns>
+        <RadzenDataGridColumn TItem="HoraExtra"
+                              Title="Codigo"
+                              Property="Code">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="HoraExtra"
+                              Title="Codigo"
+                              Property="Code">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="HoraExtra"
+                              Title="Codigo"
+                              Property="Code">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="HoraExtra"
+                              Title="Estatus">
+                <Template Context="horaExtra">
+                @{
+                    var statusName = (EstadoSolicitud)horaExtra.Estado;
+                }
+                @switch (statusName)
+                {
+                    case EstadoSolicitud.Cancelado:
+                        <RadzenBadge BadgeStyle="BadgeStyle.Danger" Shade="Shade.Lighter" class="price-badge" Text="@statusName.ToString()" />
+                        break;
+                    case EstadoSolicitud.AprobadoPorGerenteArea:
+                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Shade="Shade.Lighter" class="price-badge" Text="@statusName.ToString()" />
+                        break;
+
+                    case EstadoSolicitud.AprobadoPorGerenteGeneral:
+                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Shade="Shade.Lighter" class="price-badge" Text="@statusName.ToString()" />
+                        break;
+
+                    case EstadoSolicitud.Aprobado:
+                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Shade="Shade.Lighter" class="price-badge" Text="@statusName.ToString()" />
+                        break;
+
+                    default:
+                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Shade="Shade.Lighter" class="price-badge" Text="Creada" />
+                        break;
+                }
+                </Template>
+        </RadzenDataGridColumn>
+
+<RadzenDataGridColumn TItem="HoraExtra"
+            TextAlign="TextAlign.Center"
+                              Title="Acciones">
+            <Template Context="horaExtra">
+                <div class="d-flex justify-content-center">
+                    <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Size="ButtonSize.Small" Click="@(async()=> await OpenAddDialogForm())" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Click="@(async()=> await OpenAddDialogForm())" />
+                </div>
+            </Template>
+</RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>

@@ -18,7 +18,7 @@ namespace BillWare.App.Services
             _controllerName = controllerName;
         }
 
-        public async Task<BaseResponse<T>> CreateAsync(T entity)
+        public async Task<BaseResponse<T>> CreateAsync(object entity)
         {
             try
             {
@@ -121,7 +121,7 @@ namespace BillWare.App.Services
 
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            var request = await _httpClient.GetAsync($"{_controllerName}/GetById/id={identity}");
+            var request = await _httpClient.GetAsync($"{_controllerName}/GetById/{identity}");
 
             if (!request.IsSuccessStatusCode)
             {
@@ -130,12 +130,12 @@ namespace BillWare.App.Services
                 return BaseResponse<T>.BuildErrorResponse(errorResponse!);
             }
 
-            var response = await request.Content.ReadFromJsonAsync<BaseResponse<T>>();
+            var response = await request.Content.ReadFromJsonAsync<T>();
 
-            return BaseResponse<T>.BuildSuccessResponse(response!.Data!);
+            return BaseResponse<T>.BuildSuccessResponse(response!);
         }
 
-        public async Task<BaseResponse<T>> UpdateAsync(T entity)
+        public async Task<BaseResponse<T>> UpdateAsync(object entity)
         {
             try
             {

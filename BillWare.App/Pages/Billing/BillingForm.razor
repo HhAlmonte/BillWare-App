@@ -3,40 +3,98 @@
         <RadzenFieldset Text="Cliente">
             <div class="row">
                 <div class="col-md-7">
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
-                        <RadzenLabel Text="Codigo:" Style="width: 100px;" />
-                        <RadzenTextBox @bind-Value="CostumerId" Placeholder="Codigo del cliente" Style="width: 200px;" />
-                        <RadzenButton Icon="search" ButtonStyle="ButtonStyle.Light" class="btn btn-light ml-2" Click="GetCostumer"/>
-                    </RadzenStack>
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
                         <RadzenLabel Text="Nombre:" Style="width: 100px;" />
-                        <RadzenTextBox @bind-Value="Billing.FullName" Placeholder="Nombre del cliente" Style="width: 200px;" />
+
+                        <RadzenAutoComplete @bind-Value="Costumer.FullName" 
+                                            Data="Costumers"
+                                            Name="CostumerName"
+                                            TextProperty="FullName"
+                                            LoadData="OnLoadData"
+                                            Placeholder="Nombre completo"
+                                            Style="width: 200px;">
+                            <Template Context="costumerContext">
+                                @costumerContext.FullNameWithId
+                            </Template>
+                        </RadzenAutoComplete>
+
+                        <RadzenRequiredValidator Component="CostumerName"
+                                                 Text="Nombre del cliente es requerido"
+                                                 Popup="false"
+                                                 Style="position: relative" />
                     </RadzenStack>
+
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
                         <RadzenLabel Text="Telefono:" Style="width: 100px;" />
-                        <RadzenTextBox @bind-Value="Billing.Phone" Placeholder="Número del cliente" Style="width: 200px;" />
+
+                        <RadzenMask @bind-Value="Costumer!.Phone" 
+                                    Mask="(***) ***-****"
+                                    Placeholder="(000) 000-0000"
+                                    CharacterPattern="[0-9]" 
+                                    Name="CostumerPhone"
+                                    Style="width: 200px;" />
+
+                        <RadzenRequiredValidator Component="CostumerPhone"
+                                                 Text="Teléfono del cliente es requerido"
+                                                 Popup="false"
+                                                 Style="position: relative" />
                     </RadzenStack>
+
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
                         <RadzenLabel Text="Dirección:" Style="width: 100px;" />
-                        <RadzenTextBox @bind-Value="Billing.Address" Placeholder="Dirección del cliente" Style="width: 200px;" />
+
+                        <RadzenTextBox @bind-Value="Costumer!.Address" 
+                                       Placeholder="Dirección del cliente"
+                                       Name="CostumerAddress"
+                                       Style="width: 200px;" />
+
+                        <RadzenRequiredValidator Component="CostumerAddress"
+                                                 Text="Dirección del cliente es requerido"
+                                                 Popup="false"
+                                                 Style="position: relative" />
                     </RadzenStack>
+
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
                         <RadzenLabel Text="Cédula:" Style="width: 100px;" />
-                        <RadzenTextBox @bind-Value="Billing.NumberId" Placeholder="Cédula del cliente" Style="width: 200px;" />
+
+                        <RadzenMask @bind-Value="Costumer!.NumberId"
+                                    Mask="***-*******-*"
+                                    Placeholder="000-0000000-0"
+                                    CharacterPattern="[0-9]"
+                                    Name="CostumerNumberId"
+                                    Style="width: 200px;" />
+
+                        <RadzenRequiredValidator Component="CostumerNumberId"
+                                                 Text="Cédula del cliente es requerido"
+                                                 Popup="false"
+                                                 Style="position: relative" />
                     </RadzenStack>
                 </div>
                 <div class="col-md">
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
                         <RadzenLabel Text="Fecha:" Style="width: 100px;" />
-                        <RadzenDatePicker @bind-Value="Billing.CreatedAt" Placeholder="Fecha" Style="width: 200px;" Disabled="true"/>
+
+                        <RadzenDatePicker @bind-Value="Billing.CreatedAt" 
+                                          Placeholder="Fecha" 
+                                          Style="width: 200px;" 
+                                          Name="CreatedAt"
+                                          Disabled="true"/>
                     </RadzenStack>
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
                         <RadzenLabel Text="N. Factura:" Style="width: 100px;" />
-                        <RadzenTextBox @bind-Value="Billing.InvoiceNumber" Placeholder="Número de factura" Style="width: 200px;" Disabled="true"/>
+
+                        <RadzenTextBox @bind-Value="Billing.InvoiceNumber" 
+                                       Placeholder="Número de factura" 
+                                       Style="width: 200px;" 
+                                       Disabled="true"/>
                     </RadzenStack>
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
                         <RadzenLabel Text="Vendedor:" Style="width: 100px;" />
-                        <RadzenTextBox @bind-Value="SellerName" Placeholder="Nombre del vendedor" Style="width: 200px;" Disabled="true"/>
+
+                        <RadzenTextBox @bind-Value="SellerName" 
+                                       Placeholder="Nombre del vendedor" 
+                                       Style="width: 200px;" 
+                                       Disabled="true"/>
                     </RadzenStack>
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
                         <RadzenLabel Text="Metodo de pago:" Style="width: 100px;" />
@@ -45,7 +103,13 @@
                                         ValueProperty="Id"
                                         Data="PaymentMethods"   
                                         Placeholder="Seleccione metodo de pago" 
+                                        Name="PaymentMethods"
                                         Style="width: 200px;"/>
+
+                        <RadzenRequiredValidator Component="PaymentMethods"
+                                                 Text="método de pago es requerido"
+                                                 Popup="false"
+                                                 Style="position: relative" />
                     </RadzenStack>
                 </div>
             </div>
@@ -84,6 +148,12 @@
                         PageSize="5" @ref="grid"
                         AllowColumnResize
                         Responsive>
+            <EmptyTemplate>
+                <div class="text-center">
+                    <i style="font-size:3rem" class="text-muted bx bx-search-alt mt-2"></i>
+                    <p class="text-muted">La lista está vacía.</p>
+                </div>
+            </EmptyTemplate>
             <Columns>
                 <RadzenDataGridColumn TItem="BillingItemModel"
                                       Property="Code"
