@@ -5,79 +5,112 @@
 <RadzenTemplateForm TItem="RegistrationModel"
                     Data="Registration"
                     Submit="OnSubmit">
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12"
+                      SizeSM="6">
+               <RadzenFormField Text="Nombre completo">
+                   <RadzenTextBox @bind-Value="Registration.FirstName" 
+                                  class="text-box"  
+                                  Name="Name"/>
+                   <RadzenRequiredValidator Component="Name" 
+                                            Text="Introducir nombre" 
+                                            Popup="true" 
+                                            Style="position: absolute" />
+               </RadzenFormField>
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="form-group">
-                <RadzenLabel Text="Nombre completo"></RadzenLabel>
-                <RadzenTextBox Name="Name" @bind-Value="@Registration.FirstName" class="form-control" />
-                <RadzenRequiredValidator Component="Name" Text="Introducir nombre" Popup="true" Style="position: absolute" />
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="form-group">
-                <RadzenLabel Text="Apellido"></RadzenLabel>
-                <RadzenTextBox Name="LastName" @bind-Value="@Registration.LastName" class="form-control" />
-                <RadzenRequiredValidator Component="LastName" Text="Introducir apellido" Popup="true" Style="position: absolute" />
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="form-group">
-                <RadzenLabel Text="Usuario"></RadzenLabel>
-                <RadzenTextBox Name="UserName" @bind-Value="@Registration.UserName" class="form-control" />
-                <RadzenRequiredValidator Component="UserName" Text="Introducir nombre de usuario" Popup="true" Style="position: absolute" />
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="form-group">
-                <RadzenLabel Text="Correo Electronico"></RadzenLabel>
-                <RadzenTextBox Name="Email" @bind-Value="@Registration.Email" class="form-control" />
-                <RadzenRequiredValidator Component="Email" Text="Introducir email" Popup="true" Style="position: absolute" />
-            </div>
-        </div>
-        @if (ShowPasswordInput)
-        {
-            <div class="col-md-6">
-                <div class="form-group">
-                    <RadzenLabel Text="Contraseña"></RadzenLabel>
-                    <RadzenTextBox Name="Password" @bind-Value="@Registration.Password" class="form-control" />
-                    <RadzenRequiredValidator Component="Password" Text="Introducir contraseña" Popup="true" Style="position: absolute" />
-                </div>
-            </div>
-        }
-        <div class="col-md-6">
-            <div class="form-group">
-                <RadzenLabel Text="Cédula"></RadzenLabel>
-                <RadzenTextBox Name="NmberId" @bind-Value="@Registration.NumberId" class="form-control" />
-                <RadzenRequiredValidator Component="NmberId" Text="Introducir cedula" Popup="true" Style="position: absolute" />
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="form-group">
-                <RadzenLabel Text="Dirección"></RadzenLabel>
-                <RadzenTextBox Name="Address" @bind-Value="@Registration.Address" class="form-control" />
-                <RadzenRequiredValidator Component="Address" Text="Introducir dirección" Popup="true" Style="position: absolute" />
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="form-group">
-                <RadzenLabel Text="Rol"></RadzenLabel>
+               <RadzenFormField Text="Apellidos" class="mt-3">
+                   <RadzenTextBox @bind-Value="Registration.LastName" 
+                                  class="text-box"  
+                                  Name="LastName"/>
+                   <RadzenRequiredValidator Component="LastName" 
+                                            Text="Introducir apellido" 
+                                            Popup="true" 
+                                            Style="position: absolute" />
+               </RadzenFormField>
+
+               <RadzenFormField Text="Nombre de usuario" class="mt-3">
+                   <RadzenTextBox @bind-Value="Registration.UserName" 
+                                  class="text-box"  
+                                  Name="UserName"/>
+                    <RadzenRequiredValidator Component="UserName" 
+                                              Text="Introducir nombre de usuario" 
+                                              Popup="true" 
+                                              Style="position: absolute" />
+               </RadzenFormField>
+
+               <RadzenFormField Text="Correo electrónico" class="mt-3">
+                    <RadzenTextBox @bind-Value="Registration.Email" 
+                                    class="text-box"  
+                                    Name="Email"/>
+                    <RadzenRequiredValidator Component="Email" 
+                                             Text="Introducir correo electrónico" 
+                                             Popup="true" 
+                                             Style="position: absolute" />
+                   <RadzenEmailValidator Component="Email"
+                                           Text="Introducir un correo electrónico válido"
+                                           Popup="true"
+                                           Style="position: absolute" />
+               </RadzenFormField>
+
+            @if (ShowPasswordInput)
+            {
+                <RadzenFormField Text="Contraseña" class="mt-3">
+                    <RadzenTextBox Name="Password" 
+                                   @bind-Value="@Registration.Password" 
+                                   class="text-box" />
+                    <RadzenRequiredValidator Component="Password" 
+                                             Text="Introducir contraseña" 
+                                             Popup="true" 
+                                             Style="position: absolute" />
+                </RadzenFormField>
+            }
+
+            <RadzenFormField Text="Número de identidad" class="mt-3">
+                <RadzenTextBox @bind-Value="Registration.NumberId" 
+                               class="text-box"  
+                               Name="NumberId"/>
+
+                <RadzenRequiredValidator Component="NumberId" 
+                                         Text="Introducir número de identidad" 
+                                         Popup="true" 
+                                         Style="position: absolute" />
+            </RadzenFormField>
+
+            <RadzenFormField Text="Dirección de residencia" class="mt-3">
+                <RadzenTextBox Name="Address" 
+                               @bind-Value="@Registration.Address" 
+                               class="text-box" />
+                <RadzenRequiredValidator Component="Address" 
+                                         Text="Introducir dirección" 
+                                         Popup="true" 
+                                         Style="position: absolute" />
+            </RadzenFormField>
+
+            <RadzenFormField Text="Rol" class="mt-3">
                 <RadzenDropDown Data="Roles"
                                 TValue="string"
                                 TextProperty="RoleValue"
                                 ValueProperty="RoleValue"
                                 Name="Rol"
                                 @bind-Value="Registration.Role"
-                                class="form-control" />
-                <RadzenRequiredValidator Component="Rol" Text="Introducir rol" Popup="true" Style="position: absolute" />
-            </div>
-        </div>
-    </div>
-    <div class="form-group text-center mt-3">
-        <RadzenButton Text="Aceptar" ButtonType="Radzen.ButtonType.Submit" Style="background-color:#003053; color: #FFF" />
-    </div>
+                                class="text-box" />
+                <RadzenRequiredValidator Component="Rol" 
+                                         Text="Seleccionar un rol" 
+                                         Popup="false" 
+                                         Style="position: absolute" />
+            </RadzenFormField>
+
+            <RadzenButton Text="Aceptar" 
+                          class="mt-3"
+                          ButtonType="ButtonType.Submit" 
+                          Style="background-color:#003053; color: #FFF" />
+        </RadzenColumn>
+    </RadzenRow>
 </RadzenTemplateForm>
 
-@code {
-    
-}
+<style>
+    .text-box {
+        width: 320px;
+    }
+</style>
+

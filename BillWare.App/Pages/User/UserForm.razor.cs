@@ -43,14 +43,14 @@ namespace BillWare.App.Pages.User
             }
 
             var closeReturn = response != null ? true : false;
-            DialogService.Close(closeReturn);
+            DialogService.CloseSide(closeReturn);
         }
 
         public async Task Edit()
         {
             var userToUpdate = new UserModel
             {
-                Id = UserParameter.Id,
+                IdentityId = UserParameter.IdentityId,
                 FirstName = Registration.FirstName,
                 LastName = Registration.LastName,
                 Email = Registration.Email,
@@ -69,7 +69,7 @@ namespace BillWare.App.Pages.User
             }
 
             var closeReturn = response != null ? true : false;
-            DialogService.Close(closeReturn);
+            DialogService.CloseSide(closeReturn);
         }
 
         protected override void OnInitialized()

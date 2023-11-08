@@ -1,4 +1,5 @@
 ﻿using BillWare.App.Helpers;
+using BillWare.App.Intefaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using System.Security.Claims;
@@ -9,12 +10,14 @@ namespace BillWare.App.Shared
     public partial class NavMenu
     {
         [Inject] BeamAuthenticationStateProviderHelper? AuthenticationStateProvider { get; set; }
+        [Inject] NavigationManager? navigationManager { get; set; }
+        [Inject] IJWTAuthenticationStateProvider? _jwtAuthenticationStateProvider { get; set; }
 
         private bool IsMenuOpen = false;
         private string DashboardClass = "menu-dashboard";
         private string Role = string.Empty;
-        private List<MenuItem> MenuItems = new List<MenuItem>();
         private int ActiveLinkIndex = -1;
+        private MenuConfiguration MenuConfiguration = new MenuConfiguration();
 
         private void ToggleMenu()
         {
@@ -29,31 +32,26 @@ namespace BillWare.App.Shared
         }
         private void NavigateTo(string url, int index)
         {
-            IsMenuOpen = !IsMenuOpen;
+            IsMenuOpen = false;
             DashboardClass = "menu-dashboard";
-            navigationManager.NavigateTo(url);
+            navigationManager!.NavigateTo(url);
             ActiveLinkIndex = index;
-        }
-
-        private void LoadMenuItem()
-        {
-            MenuItems.Add(new MenuItem { Name = "Dashboard", Url = "/", Icon = "bx bx-category", Role = "Administrator" });
-            MenuItems.Add(new MenuItem { Name = "Servicios", Url = "service/index", Icon = "bx bx-leaf", Role = "Both" });
-            MenuItems.Add(new MenuItem { Name = "Inventario", Url = "inventory/index", Icon = "bx bx-store-alt", Role = "Both" });
-            MenuItems.Add(new MenuItem { Name = "Categoría", Url = "category/index", Icon = "bx bx-category", Role = "Both" });
-            MenuItems.Add(new MenuItem { Name = "Cliente", Url = "costumer/index", Icon = "bx bx-user", Role = "Both" });
-            MenuItems.Add(new MenuItem { Name = "Facturación", Url = "billing/index", Icon = "bx bxs-badge-dollar", Role = "Both" });
-            MenuItems.Add(new MenuItem { Name = "Usuarios", Url = "user/index", Icon = "bx bx-user-circle", Role = "Administrator" });
         }
 
         protected override async Task OnInitializedAsync()
         {
             var authState = await AuthenticationStateProvider!.GetAuthenticationStateAsync();
 
-            LoadMenuItem();
+            Role = authState
+                .User
+                .Claims
+                .FirstOrDefault(x => x.Type == ClaimTypes.Role)!.Value;
 
-            Role = authState.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role)!.Value;
+            var currentLocation = navigationManager!.ToBaseRelativePath(navigationManager.Uri);
 
+            ActiveLinkIndex = MenuConfiguration
+                       .MenuItems!
+                       .FindIndex(x => x.Url == currentLocation);
         }
     }
 }

@@ -4,7 +4,7 @@
 
 <hr />
 
-<RadzenButton Text="AGREGAR" class="mb-3 mt-3" Style="background-color:#003053; color: #FFF" Click="@(async()=> await OpenAddDialogForm("Registar cliente"))" />
+<RadzenButton Text="AGREGAR" class="mb-3 mt-3" Style="background-color:#003053; color: #FFF" Click="@(async()=> await OpenAddDialogForm())" />
 <RadzenTextBox Placeholder="Presiona ENTER al buscar" Change="@(async(e) => await GetCostumersWithSearch(e))" />
 
 <RadzenDataGrid Data="Costumers"
@@ -63,8 +63,8 @@
     </Columns>
 </RadzenDataGrid>
 
-<RadzenPager PageSize="PaginationResult.PageSize"
-             Count="PaginationResult.TotalItems"
+<RadzenPager PageSize="BaseResponse.PageSize"
+             Count="BaseResponse.TotalItems"
              PageChanged="@(async(e) => await PageIndexChanged(e.PageIndex))"
              PageSizeOptions="PageSizeOptions"
              PageSizeText="registros por página"

@@ -45,7 +45,7 @@ namespace BillWare.App.Pages.Category
 
             var closeReturn = response != null ? true : false;
 
-            DialogService!.Close(closeReturn);
+            DialogService!.CloseSide(closeReturn);
         }
 
         private async Task Edit()
@@ -54,13 +54,13 @@ namespace BillWare.App.Pages.Category
 
             var closeReturn = response != null ? true : false;
 
-            if (!response.IsSuccessFull)
+            if (response!.IsSuccessFull)
             {
                 await SweetAlertServices.ShowErrorAlert(response.Message, response.Details!);
                 return;
             }
 
-            DialogService?.Close(closeReturn);
+            DialogService?.CloseSide(closeReturn);
         }
 
         protected override void OnInitialized()

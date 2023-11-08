@@ -1,65 +1,66 @@
 ﻿<RadzenTemplateForm TItem="CostumerModel"
                     Data="@Costumer"
                     Submit="OnSubmit">
-    <div class="row">
-        <div class="col-md-6">
-            <div class="form-group">
-                <RadzenLabel Text="Nombre Completo"></RadzenLabel>
-
-                <RadzenTextBox Name="Name" 
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12"
+                      SizeSM="6">
+            <RadzenFormField Text="Nombre y Apellido">
+                <RadzenTextBox Name="Name"
                                MaxLength="100"
-                               Placeholder="Introducir nombre"
-                               @bind-Value="@Costumer.FullName" 
-                               class="form-control" />
+                               @bind-Value="@Costumer.FullName"
+                               class="text-box" />
 
-                <RadzenRequiredValidator Component="Name" 
-                                         Text="Introducir nombre" 
-                                         Popup="true" 
+                <RadzenRequiredValidator Component="Name"
+                                         Text="Introducir nombre y apellido"
+                                         Popup="true"
                                          Style="position: absolute" />
-            </div>
-            <div class="form-group">
-                <RadzenLabel Text="Teléfono" class="mt-3" />
+            </RadzenFormField>
 
+            <RadzenFormField Text="Número de teléfono" class="mt-3">
                 <RadzenMask Name="Phone"
                             MaxLength="18"
                             @bind-Value="@Costumer.Phone"
                             Mask="(***) ***-****"
-                            Placeholder="(000) 000-0000"
                             CharacterPattern="[0-9]"
-                            class="form-control"/>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="form-group">
-                <RadzenLabel Text="Dirección"></RadzenLabel>
-                <RadzenTextBox Name="Address" 
+                            class="text-box" />
+
+                <RadzenRequiredValidator Component="Phone"
+                                         Text="Introducir número de teléfono"
+                                         Popup="true"
+                                         Style="position: absolute" />  
+            </RadzenFormField>
+
+            <RadzenFormField Text="Dirección residencial" class="mt-3">
+                <RadzenTextBox Name="Address"
                                MaxLength="100"
-                               Placeholder="Introducir dirección"
-                               @bind-Value="@Costumer.Address" 
-                               class="form-control" />
-            </div>
-            <div class="form-group">
-                <RadzenLabel Text="Cédula" class="mt-3" />
+                               @bind-Value="@Costumer.Address"
+                               class="text-box" />
+            </RadzenFormField>
+
+            <RadzenFormField Text="Número de identidad" class="mt-3">
                 <RadzenMask @bind-Value="Costumer!.NumberId"
                             Mask="***-*******-*"
                             MaxLength="13"
-                            Placeholder="000-0000000-0"
                             CharacterPattern="[0-9]"
-                            Name="NumberId" 
-                            class="form-control"/>
+                            Name="NumberId"
+                            class="text-box" />
 
-                <RadzenRequiredValidator Component="NumberId" 
-                                         Text="Introducir cédula" 
-                                         Popup="true" 
+                <RadzenRequiredValidator Component="NumberId"
+                                         Text="Introducir cédula"
+                                         Popup="true"
                                          Style="position: absolute" />
-            </div>
-        </div>
-    </div>
-    <div class="form-group text-center mt-3">
-        <RadzenButton Text="@ButtonTitle" ButtonType="Radzen.ButtonType.Submit" Style="background-color:#003053; color: #FFF" />
-    </div>
+            </RadzenFormField>
+
+            <RadzenButton Text="@ButtonTitle"
+                          class="mt-3"    
+                          ButtonType="ButtonType.Submit"
+                          Style="background-color:#003053; color: #FFF" />
+        </RadzenColumn>
+    </RadzenRow>
 </RadzenTemplateForm>
 
-@code {
-    
-}
+<style>
+    .text-box {
+        width: 320px;
+    }
+</style>

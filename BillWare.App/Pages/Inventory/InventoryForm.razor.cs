@@ -44,7 +44,7 @@ namespace BillWare.App.Pages.Inventory
             }
 
             var closeReturn = response != null ? true : false;
-            DialogService!.Close(closeReturn);
+            DialogService!.CloseSide(closeReturn);
         }
 
         private async Task Edit()
@@ -58,7 +58,7 @@ namespace BillWare.App.Pages.Inventory
             }
 
             var closeReturn = response != null ? true : false;
-            DialogService!.Close(closeReturn);
+            DialogService!.CloseSide(closeReturn);
         }
 
         private async Task LoadCategories()

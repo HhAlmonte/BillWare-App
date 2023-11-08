@@ -4,19 +4,36 @@
             <div class="row">
                 <div class="col-md-7">
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
-                        <RadzenLabel Text="Nombre:" Style="width: 100px;" />
+                        <RadzenLabel Text="Cédula:" Style="width: 100px;" />
 
-                        <RadzenAutoComplete @bind-Value="Costumer.FullName" 
+                        <RadzenAutoComplete @bind-Value="Costumer.NumberId"
+                                            Change="@(async() => await SetCostumerDataByNumerId())"
                                             Data="Costumers"
-                                            Name="CostumerName"
-                                            TextProperty="FullName"
+                                            Name="CostumerNumberId"
+                                            TextProperty="NumberId"
                                             LoadData="OnLoadData"
-                                            Placeholder="Nombre completo"
+                                            Placeholder="000-0000000-0"
                                             Style="width: 200px;">
                             <Template Context="costumerContext">
                                 @costumerContext.FullNameWithId
                             </Template>
                         </RadzenAutoComplete>
+
+                        <RadzenRequiredValidator Component="CostumerNumberId"
+                                                 Text="Cédula del cliente es requerido"
+                                                 Popup="false"
+                                                 Style="position: relative" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
+                        <RadzenLabel Text="Nombre:" Style="width: 100px;" />
+
+                        <RadzenTextBox @bind-Value="Costumer.FullName"
+                                       Disabled="IsDisabled"
+                                       Name="CostumerName"
+                                       Placeholder="Nombre completo"
+                                       Style="width: 200px;">
+                        </RadzenTextBox>
 
                         <RadzenRequiredValidator Component="CostumerName"
                                                  Text="Nombre del cliente es requerido"
@@ -29,6 +46,7 @@
 
                         <RadzenMask @bind-Value="Costumer!.Phone" 
                                     Mask="(***) ***-****"
+                                    Disabled="IsDisabled"
                                     Placeholder="(000) 000-0000"
                                     CharacterPattern="[0-9]" 
                                     Name="CostumerPhone"
@@ -43,29 +61,14 @@
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
                         <RadzenLabel Text="Dirección:" Style="width: 100px;" />
 
-                        <RadzenTextBox @bind-Value="Costumer!.Address" 
+                        <RadzenTextBox @bind-Value="Costumer!.Address"
+                                       Disabled="IsDisabled"
                                        Placeholder="Dirección del cliente"
                                        Name="CostumerAddress"
                                        Style="width: 200px;" />
 
                         <RadzenRequiredValidator Component="CostumerAddress"
                                                  Text="Dirección del cliente es requerido"
-                                                 Popup="false"
-                                                 Style="position: relative" />
-                    </RadzenStack>
-
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="mt-2">
-                        <RadzenLabel Text="Cédula:" Style="width: 100px;" />
-
-                        <RadzenMask @bind-Value="Costumer!.NumberId"
-                                    Mask="***-*******-*"
-                                    Placeholder="000-0000000-0"
-                                    CharacterPattern="[0-9]"
-                                    Name="CostumerNumberId"
-                                    Style="width: 200px;" />
-
-                        <RadzenRequiredValidator Component="CostumerNumberId"
-                                                 Text="Cédula del cliente es requerido"
                                                  Popup="false"
                                                  Style="position: relative" />
                     </RadzenStack>

@@ -17,7 +17,7 @@ namespace BillWare.App.Pages.Costumer
         [Parameter] public CostumerModel CostumerParameter { get; set; } = new CostumerModel();
 
         private CostumerModel Costumer = new CostumerModel();
-        private string ButtonTitle => FormMode == FormModeEnum.ADD ? "Agregar" : "Editar";
+        private string ButtonTitle => FormMode == FormModeEnum.ADD ? "Agregar" : "Modificar";
 
         private async Task OnSubmit()
         {
@@ -42,7 +42,7 @@ namespace BillWare.App.Pages.Costumer
             }
 
             var closeReturn = response != null ? true : false;
-            DialogService!.Close(closeReturn);
+            DialogService!.CloseSide(closeReturn);
         }
 
         private async Task Edit()
@@ -56,7 +56,7 @@ namespace BillWare.App.Pages.Costumer
             }
 
             var closeReturn = response != null ? true : false;
-            DialogService!.Close(closeReturn);
+            DialogService!.CloseSide(closeReturn);
         }
 
         protected override void OnInitialized()

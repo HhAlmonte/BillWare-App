@@ -9,8 +9,6 @@
     color: #E0E0E0;
 }
 
-/* LAYOUT */
-
 .menu-dashboard {
     max-width: 100px;
     height: auto;
@@ -33,13 +31,13 @@
     }
 
         .top-menu .logo span {
-            font-size: 20px;
+            font-size: 18px;
             margin-left: 20px;
             display: none;
         }
 
     .top-menu .toggle {
-        width: 30px;
+        width: 47px;
         height: 20px;
         display: flex;
         align-items: center;
@@ -51,17 +49,16 @@
             font-size: 35px;
         }
 
-/* ENLACES MENU */
-
 .menu .enlace {
     width: 100%;
-    padding: 20px 0 20px 17px;
     border-radius: 8px;
     display: flex;
     align-items: center;
     cursor: pointer;
-    font-size: 20px;
+    font-size: 18px;
     transition: all .3s ease;
+    padding: 15px 0 15px 17px;
+    margin-bottom: 5px;
 }
 
     .menu .enlace:hover {
@@ -69,8 +66,8 @@
     }
 
     .menu .enlace i {
-        margin-right: 20px;
-        font-size: 25px;
+        margin-right: 15px;
+        font-size: 23px;
     }
 
     .menu .enlace span {
@@ -91,7 +88,8 @@
     }
 
     .menu-dashboard.open .menu .enlace {
-        padding: 20px;
+        padding: 15px;
+        margin-bottom: 5px;
     }
 
         .menu-dashboard.open .menu .enlace span {

@@ -324,7 +324,7 @@ namespace BillWare.App.Pages.Billing
 
         private async Task OpenAddDialogForm()
         {
-            var dialogResult = await DialogService!.OpenAsync<BillingForm>("Crear Factura"
+            var dialogResult = await DialogService!.OpenAsync<BillingForm>("Registrar nueva factura"
                       ,options: new DialogOptions
                       {
                           Width = "1080px",
@@ -350,7 +350,7 @@ namespace BillWare.App.Pages.Billing
         }
         private async Task OpenEditDialogForm(BillingModel billing)
         {
-            var dialogResponse = await DialogService!.OpenAsync<BillingForm>("Editar Factura"
+            var dialogResponse = await DialogService!.OpenAsync<BillingForm>("Modificar datos de la factura"
                       , parameters: new Dictionary<string, object>() { { "BillingParameter", billing }, { "FormMode", FormModeEnum.EDIT } }
                       , options: new DialogOptions
                       {
@@ -386,6 +386,11 @@ namespace BillWare.App.Pages.Billing
             await LoadData(PageIndex);
 
             IsLoading = false;
+
+            if (BaseResponse.Items.Count <= 0)
+            {
+                await SweetAlertServices.ShowToastAlert("No hay registros", "No se encontraron registros", SweetAlertIcon.Warning);
+            }
         }
     }
 }

@@ -144,16 +144,18 @@ namespace BillWare.App.Pages.Inventory
             }
         }
 
-        private async Task OpenAddDialogForm(string title)
+        private async Task OpenAddDialogForm()
         {
-            var dialogResult = await DialogService!.OpenAsync<InventoryForm>(title,
+            var dialogResult = await DialogService!.OpenSideAsync<InventoryForm>("Registrar nuevo inventario",
                       new Dictionary<string, object>
                       {
                           { "FormMode", FormModeEnum.ADD }
                       },
-                      new DialogOptions
+                      new SideDialogOptions
                       {
-                          Width = "auto"
+                          CloseDialogOnOverlayClick = true,
+                          Position = DialogPosition.Right,
+                          ShowMask = false
                       });
 
             var isLoad = dialogResult == null ? false : true;
@@ -170,17 +172,19 @@ namespace BillWare.App.Pages.Inventory
             }
         }
 
-        private async Task OpenEditDialogForm(string title, InventoryModel inventory)
+        private async Task OpenEditDialogForm(InventoryModel inventory)
         {
-            var dialogResult = await DialogService!.OpenAsync<InventoryForm>(title,
+            var dialogResult = await DialogService!.OpenSideAsync<InventoryForm>("Modificar información del inventario",
                       new Dictionary<string, object>
                       {
                           { "FormMode", FormModeEnum.EDIT },
                           { "InventoryParameter", inventory }
                       },
-                      new DialogOptions
+                      new SideDialogOptions
                       {
-                          Width = "auto",
+                          CloseDialogOnOverlayClick = true,
+                          Position = DialogPosition.Right,
+                          ShowMask = false
                       });
 
             var isLoad = dialogResult == null ? false : true;

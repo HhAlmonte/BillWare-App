@@ -28,11 +28,12 @@ namespace BillWare.App.Pages.User
 
         private async Task OpenAddDialogForm(string title)
         {
-            var dialogResult = await DialogService!.OpenAsync<UserForm>(title,
-                      options: new DialogOptions
+            var dialogResult = await DialogService!.OpenSideAsync<UserForm>(title,
+                      options: new SideDialogOptions
                       {
-                          Width = "700px",
-                          Draggable = true,
+                          CloseDialogOnOverlayClick = true,
+                          Position = DialogPosition.Right,
+                          ShowMask = false
                       });
 
             var isLoad = dialogResult == null ? false : true;
@@ -50,16 +51,17 @@ namespace BillWare.App.Pages.User
         }
         private async Task OpenEditDialogForm(UserModel user)
         {
-            var dialogResult = await DialogService!.OpenAsync<UserForm>("Editar usuario",
+            var dialogResult = await DialogService!.OpenSideAsync<UserForm>("Modificar datos de usuario",
                     parameters: new Dictionary<string, object>()
                     {
                         { "UserParameter", user },
                         { "FormMode", FormModeEnum.EDIT }
                     },
-                    options: new DialogOptions
+                    options: new SideDialogOptions
                     {
-                        Width = "700px",
-                        Draggable = true,
+                        CloseDialogOnOverlayClick = true,
+                        Position = DialogPosition.Right,
+                        ShowMask = false
                     });
 
             var isLoad = dialogResult == null ? false : true;
@@ -121,6 +123,11 @@ namespace BillWare.App.Pages.User
             await LoadData(PageIndex);
 
             IsLoading = false;
+
+            if (BaseResponse.Items.Count <= 0)
+            {
+                await SweetAlertServices.ShowToastAlert("No hay registros", "No se encontraron registros", SweetAlertIcon.Warning);
+            }
         }
         private async Task PageIndexChanged(int pageIndex)
         {

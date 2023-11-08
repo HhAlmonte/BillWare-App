@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using BillWare.App.Helpers;
 using BillWare.App.Enum;
 using BillWare.App.Intefaces;
+using System.Runtime.CompilerServices;
 
 namespace BillWare.App.Pages.Billing
 {
@@ -27,6 +28,7 @@ namespace BillWare.App.Pages.Billing
         private CostumerModel Costumer = new CostumerModel();
         private BillingModel Billing = new BillingModel()
         {
+            PaymentMethod = 1,
             CreatedAt = DateTime.Now,
         };
         private RadzenDataGrid<BillingItemModel>? grid;
@@ -58,6 +60,7 @@ namespace BillWare.App.Pages.Billing
         public string ReturnMoney { get; set; } = "0";
         private string? CostumerId { get; set; }
         private string? SellerName { get; set; }
+        private bool IsDisabled { get; set; } = false;
 
         private void OnDropDowmChange()
         {
@@ -82,11 +85,6 @@ namespace BillWare.App.Pages.Billing
             CalculateNetoAndTotalPrice();
             grid.Reload();
             StateHasChanged();
-        }
-
-        private void OnInputChange(object e)
-        {
-            Console.Write($"hola {e}");
         }
 
         private async Task OpenQuantityormDialog(int quantity, int code)
@@ -123,15 +121,6 @@ namespace BillWare.App.Pages.Billing
 
             await grid!.Reload();
 
-        }
-
-        private async Task OnLoadData(LoadDataArgs args)
-        {
-            var response = await _costumerService!.GetEntitiesPagedWithSearchAsync(1, 50, args.Filter);
-
-            Costumers = response.Data!.Items;
-
-            StateHasChanged();
         }
 
         private async Task LoadInventories()
@@ -259,14 +248,57 @@ namespace BillWare.App.Pages.Billing
             StateHasChanged(); ;
         }
 
+        private async Task OnLoadData(LoadDataArgs args)
+        {
+            var response = await _costumerService!.GetEntitiesPagedWithSearchAsync(1, 10, args.Filter);
+
+            Costumers = response.Data!.Items;
+
+            StateHasChanged();
+        }
+        private async Task SetCostumerDataByNumerId()
+        {
+            var numberId = SetFormatCedula(Costumer.NumberId!);
+
+            Costumer.NumberId = numberId;
+
+            var costumer = await _costumerService!.GetEntitiesPagedWithSearchAsync(1, 1, numberId!);
+
+            if(costumer.Data!.TotalItems > 0)
+            {
+                Costumer = costumer.Data!.Items.FirstOrDefault()!;
+
+                Billing.CostumerId = costumer.Data!.Items.FirstOrDefault()!.Id;
+            }
+        }
+
+        private string SetFormatCedula(string cedula)
+        {
+            if (cedula.Length == 11)
+            {
+                return cedula.Insert(3, "-").Insert(11, "-");
+            }
+            else
+            {
+                return cedula;
+            }
+        }
+
+        private async Task SetOrCreateCostumer()
+        {
+            var costumer = await _costumerService!.GetEntityById(Billing.CostumerId);
+
+            if (costumer.Data == null)
+            {
+                var costumerCreated = await _costumerService.CreateAsync(Costumer);
+
+                Billing.CostumerId = costumerCreated.Data!.Id;
+            }
+        }
 
         private async Task CreateBilling(int billingStatus)
         {
-            var evaluateCostumer = CostumerId == null || Convert.ToInt32(CostumerId) == 0;
-
-            if(evaluateCostumer)
-            {
-            }
+            await SetOrCreateCostumer();
 
             Billing.SellerName = SellerName!;
             Billing.BillingStatus = billingStatus;
@@ -283,6 +315,8 @@ namespace BillWare.App.Pages.Billing
         }
         private async Task ModifyBilling(int billingStatus)
         {
+            await SetOrCreateCostumer();
+
             Billing.SellerName = SellerName!;
             Billing.BillingStatus = billingStatus;
 
@@ -320,29 +354,31 @@ namespace BillWare.App.Pages.Billing
 
                 BillingItems = Billing.BillingItems;
 
+                Costumer = BillingParameter.Costumer!;
+
+                IsDisabled = true;
+
                 CalculateNetoAndTotalPrice();
 
                 StateHasChanged();
 
                 return;
             }
-            else
+
+            try
             {
-                try
-                {
-                    var invoiceNumber = await _billingService!.GetLastInvoiceNumber();
+                var invoiceNumber = await _billingService!.GetLastInvoiceNumber();
 
-                    Billing.InvoiceNumber = InvoiceNumberGenerator.GenerateNumber(invoiceNumber);
-                }
-                catch (Exception)
-                {
-                    Billing.InvoiceNumber = InvoiceNumberGenerator.GenerateNumber();
-                }
-
-                CalculateNetoAndTotalPrice();
-
-                StateHasChanged();
+                Billing.InvoiceNumber = InvoiceNumberGenerator.GenerateNumber(invoiceNumber);
             }
+            catch (Exception)
+            {
+                Billing.InvoiceNumber = InvoiceNumberGenerator.GenerateNumber();
+            }
+
+            CalculateNetoAndTotalPrice();
+
+            StateHasChanged();
         }
     }
 }

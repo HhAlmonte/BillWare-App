@@ -4,7 +4,7 @@ namespace BillWare.App.Models
 {
     public class UserModel : BaseModel
     {
-        public string Id { get; set; }
+        public string IdentityId { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string NumberId { get; set; } = string.Empty;

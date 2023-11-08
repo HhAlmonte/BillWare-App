@@ -1,9 +1,4 @@
-﻿@inject NavigationManager navigationManager;
-@inject IJWTAuthenticationStateProvider _jwtAuthenticationStateProvider;
-
-
-
-<div class="@DashboardClass">
+﻿<div class="@DashboardClass">
     <div class="container body-color">
         <div class="top-menu">
             <div class="logo">
@@ -21,12 +16,18 @@
             </div>
         </div>
 
-        <div class="menu">
-            @foreach (var (menuItem, index) in MenuItems.Select((item, index) => (item, index)))
+        <div class="menu"> 
+            @foreach (var (menuItem, index) in MenuConfiguration
+                        .MenuItems!
+                        .Select((item, index) => (item, index)))
             {
-                @if (menuItem.Role == Role || menuItem.Role == "Both")
+                @if (menuItem.Role.Contains(Role))
                 {
-                    <div class="enlace" style="background: @(index == ActiveLinkIndex ? "#184463" : "")" @onclick="@(() => NavigateTo(menuItem.Url, index))">
+                    <div data-toggle="tooltip" 
+                         title="@menuItem.Name" 
+                         class="enlace" 
+                         style="background: @(index == ActiveLinkIndex ? "#184463" : "")" 
+                         @onclick="@(() => NavigateTo(menuItem.Url, index))">
                         <i class="@menuItem.Icon"></i>
                         <span>@menuItem.Name</span>
                     </div>
@@ -40,14 +41,3 @@
         </div>
     </div>
 </div>
-
-@code {
-    public class MenuItem
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Url { get; set; } = string.Empty;
-        public string Icon { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
-    }
-}
-

@@ -9,6 +9,7 @@
         <h5>Ventas de los últimos 30 días</h5>
         <RadzenChart class="mb-3">
             <RadzenLineSeries Smooth="true" Data="SalesLast30Days" CategoryProperty="SaleDate" Title="Ganancias" ValueProperty="Amount" RenderingOrder="1">
+                <RadzenSeriesTrendLine Visible="true" Stroke="var(--rz-danger-dark)" LineType="LineType.Dashed" />
                 <RadzenMarkers MarkerType="MarkerType.Circle" />
                 <RadzenSeriesDataLabels Visible="true" />
             </RadzenLineSeries>
@@ -21,9 +22,17 @@
     <div class="col-6">
         <h5>Ventas de los últimos 12 meses</h5>
         <RadzenChart class="mb-3">
-            <RadzenLineSeries Smooth="true" Data="SalesLast12Month" CategoryProperty="SaleDate" Title="Ganancias" ValueProperty="Amount" RenderingOrder="1">
+            <RadzenLineSeries Smooth="true" 
+                              Data="SalesLast12Month" 
+                              CategoryProperty="SaleDate" 
+                              Title="Ganancias" 
+                              ValueProperty="Amount" 
+                              RenderingOrder="1">
+
+                <RadzenSeriesTrendLine Visible="true" Stroke="var(--rz-danger-dark)" LineType="LineType.Dashed" />
                 <RadzenMarkers MarkerType="MarkerType.Circle" />
                 <RadzenSeriesDataLabels Visible="true" />
+
             </RadzenLineSeries>
             <RadzenCategoryAxis Padding="20" Formatter="@FormatAsMonth" />
             <RadzenValueAxis Formatter="@FormatAsUSD">

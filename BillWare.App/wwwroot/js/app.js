@@ -1,6 +1,5 @@
 const toggle = document.querySelector(".toggle")
 const menuDashboard = document.querySelector(".menu-dashboard")
-const iconoMenu = toggle.querySelector("i")
 const enlacesMenu = document.querySelectorAll(".enlace")
 
 toggle.addEventListener("click", () => {

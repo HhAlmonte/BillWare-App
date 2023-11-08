@@ -17,7 +17,7 @@ namespace BillWare.App.Pages.Costumer
         [Inject] public DialogService? DialogService { get; set; }
         [Inject] BeamAuthenticationStateProviderHelper? BeamAuthenticationStateProviderHelper { get; set; }
 
-        private PaginationResult<CostumerModel> PaginationResult { get; set; } = new PaginationResult<CostumerModel>();
+        private PaginationResult<CostumerModel> BaseResponse { get; set; } = new PaginationResult<CostumerModel>();
         private List<CostumerModel> Costumers { get; set; } = new List<CostumerModel>();
         private IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 5, 10, 20, 50 };
 
@@ -44,21 +44,23 @@ namespace BillWare.App.Pages.Costumer
                 return;
             }
 
-            PaginationResult = response.Data!;
+            BaseResponse = response.Data!;
 
-            Costumers = PaginationResult.Items;
+            Costumers = BaseResponse.Items;
         }
 
-        private async Task OpenAddDialogForm(string title)
+        private async Task OpenAddDialogForm()
         {
-            var dialogResult = await DialogService!.OpenAsync<CostumerForm>(title,
+            var dialogResult = await DialogService!.OpenSideAsync<CostumerForm>("Registrar nuevo cliente",
                       new Dictionary<string, object>
                       {
                           { "FormMode", FormModeEnum.ADD }
                       },
-                      new DialogOptions
+                      new SideDialogOptions
                       {
-                          Width = "auto"
+                          CloseDialogOnOverlayClick = true,
+                          Position = DialogPosition.Right,
+                          ShowMask = false
                       });
 
             var isLoad = dialogResult == null ? false : true;
@@ -77,15 +79,17 @@ namespace BillWare.App.Pages.Costumer
 
         private async Task OpenEditDialogForm(string title, CostumerModel costumer)
         {
-            var dialogResponse = await DialogService!.OpenAsync<CostumerForm>(title,
+            var dialogResponse = await DialogService!.OpenSideAsync<CostumerForm>(title,
                     new Dictionary<string, object>
                     {
                         { "FormMode", FormModeEnum.EDIT },
                         { "CostumerParameter", costumer }
                     },
-                    new DialogOptions
+                    new SideDialogOptions
                     {
-                        Width = "auto",
+                        CloseDialogOnOverlayClick = true,
+                        Position = DialogPosition.Right,
+                        ShowMask = false
                     });
 
             var isLoad = dialogResponse == null ? false : true;
@@ -116,8 +120,8 @@ namespace BillWare.App.Pages.Costumer
 
             var response = await _costumerService!.GetEntitiesPagedWithSearchAsync(PageIndex, PageSize, search);
 
-            PaginationResult = response.Data!;
-            Costumers = PaginationResult.Items;
+            BaseResponse = response.Data!;
+            Costumers = BaseResponse.Items;
 
             if (Costumers.Count <= 0)
             {
@@ -190,6 +194,11 @@ namespace BillWare.App.Pages.Costumer
             await LoadData(PageIndex);
 
             IsLoading = false;
+
+            if (BaseResponse.Items.Count <= 0)
+            {
+                await SweetAlertServices.ShowToastAlert("No hay registros", "No se encontraron registros", SweetAlertIcon.Warning);
+            }
         }
     }
 }

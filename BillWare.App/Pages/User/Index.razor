@@ -4,7 +4,7 @@
 
 <hr />
 
-<RadzenButton Text="AGREGAR" class="mb-3 mt-3" Style="background-color:#003053; color: #FFF" Click="@(async()=> await OpenAddDialogForm("Registrar usuario"))" />
+<RadzenButton Text="AGREGAR" class="mb-3 mt-3" Style="background-color:#003053; color: #FFF" Click="@(async()=> await OpenAddDialogForm("Registrar nuevo usuario"))" />
 
 <RadzenDataGrid Data="Users"
                 TItem="UserModel"
@@ -19,7 +19,7 @@
     <Columns>
         <RadzenDataGridColumn TItem="UserModel"
                               Title="Identificador"
-                              Property="Id">
+                              Property="IdentityId">
         </RadzenDataGridColumn>
 
         <RadzenDataGridColumn TItem="UserModel"
@@ -60,7 +60,7 @@
                               TextAlign="TextAlign.Center">
             <Template Context="user">
                 <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Click="@(async()=> await OpenEditDialogForm(user))" />
-                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async()=> await DeleteUser(user.Id))" />
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(async()=> await DeleteUser(user.IdentityId))" />
             </Template>
         </RadzenDataGridColumn>
     </Columns>

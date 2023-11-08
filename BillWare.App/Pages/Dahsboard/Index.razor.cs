@@ -128,11 +128,6 @@ namespace BillWare.App.Pages.Dahsboard
         }
         private async Task LoadDataGridDetails()
         {
-            if(Billings.Count == 0)
-            {
-                return;
-            }
-
             var totalAmount = Billings.Sum(x => x.TotalPriceWithTax);
 
             BillingDataGridDetails.Add(new BillingDataGridDetails
@@ -141,7 +136,7 @@ namespace BillWare.App.Pages.Dahsboard
                 Currency = "DOP"
             });
 
-            await gridDetails.Reload();
+            await gridDetails!.Reload();
         }
 
         private string FormatAsMonth(object value)
@@ -162,12 +157,12 @@ namespace BillWare.App.Pages.Dahsboard
         {
             IsLoading = true;
 
-            var loadDataTask = LoadData(PageIndex);
+            await LoadData(PageIndex);
             var loadSalesLast30DaysTask = LoadSalesLast30Days();
             var loadSalesLast12MonthTask = LoadSalesLast12Month();
             var loadDataGridDetailsTask = LoadDataGridDetails();
 
-            await Task.WhenAll(loadDataTask, loadSalesLast30DaysTask, loadSalesLast12MonthTask, loadDataGridDetailsTask);
+            await Task.WhenAll(loadSalesLast30DaysTask, loadSalesLast12MonthTask, loadDataGridDetailsTask);
 
             IsLoading = false;
             StateHasChanged();

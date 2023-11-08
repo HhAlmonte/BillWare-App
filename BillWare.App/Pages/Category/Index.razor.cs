@@ -34,16 +34,18 @@ namespace BillWare.App.Pages.Category
         private string Search { get; set; } = "";
 
 
-        private async Task OpenAddDialogForm(string title)
+        private async Task OpenAddDialogForm()
         {
-            var dialogResult = await DialogService!.OpenAsync<CategoryForm>(title,
+            var dialogResult = await DialogService!.OpenSideAsync<CategoryForm>("Registrar nueva categoría",
                     new Dictionary<string, object>
                     {
                         { "FormMode", FormModeEnum.ADD }
                     },
-                    new DialogOptions
+                    new SideDialogOptions
                     {
-                        Width = "auto"
+                        CloseDialogOnOverlayClick = true,
+                        Position = DialogPosition.Right,
+                        ShowMask = false
                     });
 
             var isLoad = dialogResult == null ? false : true;
@@ -60,17 +62,19 @@ namespace BillWare.App.Pages.Category
             }
         }
 
-        private async Task OpenEditDialogForm(string title, CategoryModel category)
+        private async Task OpenEditDialogForm(CategoryModel category)
         {
-            var dialogResult = await DialogService!.OpenAsync<CategoryForm>(title,
+            var dialogResult = await DialogService!.OpenSideAsync<CategoryForm>("Modificar información de categoría",
                     new Dictionary<string, object>
                         {
                             { "FormMode", FormModeEnum.EDIT },
                             { "CategoryParameter", category }
                         },
-                    new DialogOptions
+                    new SideDialogOptions
                     {
-                        Width = "auto",
+                        CloseDialogOnOverlayClick = true,
+                        Position = DialogPosition.Right,
+                        ShowMask = false
                     });
 
             var isLoad = dialogResult == null ? false : true;

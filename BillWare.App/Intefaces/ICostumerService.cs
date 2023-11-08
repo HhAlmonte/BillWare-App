@@ -4,6 +4,5 @@ namespace BillWare.App.Intefaces
 {
     public interface ICostumerService : IBaseCrudService<CostumerModel>
     {
-        
     }
 }

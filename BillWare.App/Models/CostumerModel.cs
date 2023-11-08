@@ -9,6 +9,6 @@ namespace BillWare.App.Models
         public string? Address { get; set; } = string.Empty;
         public string? NumberId { get; set; } = string.Empty; 
 
-        public string? FullNameWithId => $"{FullName} ({NumberId})";
+        public string? FullNameWithId => $"{NumberId} - {FullName}";
     }
 }

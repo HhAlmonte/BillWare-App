@@ -1,8 +1,11 @@
 ﻿@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
-/* Personalizar el scroll */
 ::-webkit-scrollbar {
-    width: 6px; /* Ancho del scroll */
+    width: 6px; 
+}
+
+::-webkit-scrollbar-button {
+    display:none;
 }
 
 ::-webkit-scrollbar-track {

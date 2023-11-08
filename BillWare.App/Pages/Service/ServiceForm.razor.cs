@@ -19,7 +19,7 @@ namespace BillWare.App.Pages.Service
 
         private BillingServiceModel BillingService = new BillingServiceModel();
 
-        private string ButtonTitle => FormMode == FormModeEnum.ADD ? "Agregar" : "Editar";
+        private string ButtonTitle => FormMode == FormModeEnum.ADD ? "Agregar" : "Modificar";
 
         private async Task OnSubmit()
         {
@@ -45,7 +45,7 @@ namespace BillWare.App.Pages.Service
 
             var closeReturn = response != null ? true : false;
 
-            DialogService!.Close(closeReturn);
+            DialogService!.CloseSide(closeReturn);
         }
 
         private async Task Edit()
@@ -60,7 +60,7 @@ namespace BillWare.App.Pages.Service
 
             var closeReturn = response != null ? true : false;
 
-            DialogService!.Close(closeReturn);
+            DialogService!.CloseSide(closeReturn);
         }
 
         protected override void OnInitialized()

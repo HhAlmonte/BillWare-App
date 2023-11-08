@@ -4,6 +4,10 @@
     flex-direction: column;
 }
 
+.rz-profile-menu {
+    border-radius: 0 0 0 20px !important;
+}
+
 main {
     flex: 1;
 }

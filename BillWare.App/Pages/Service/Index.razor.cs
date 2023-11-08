@@ -28,18 +28,20 @@ namespace BillWare.App.Pages.Service
         private bool IsAdmin { get; set; } = false;
         private string Search { get; set; } = "";
 
-        private async Task OpenAddDialogForm(string title)
+        private async Task OpenAddDialogForm()
         {
-            var dialogResult = await DialogService!.OpenAsync<ServiceForm>(title,
+            var dialogResult = await DialogService!.OpenSideAsync<ServiceForm>("Registrar nuevo servicio",
                    new Dictionary<string, object>
                    {
                         { 
                            "FormMode", FormModeEnum.ADD 
                         }
                    },
-                   new DialogOptions
+                   new SideDialogOptions
                    {
-                       Width = "auto"
+                       CloseDialogOnOverlayClick = true,
+                       Position = DialogPosition.Right,
+                       ShowMask = false
                    });
 
             var isLoad = dialogResult == null ? false : true;
@@ -55,17 +57,19 @@ namespace BillWare.App.Pages.Service
                 await SweetAlertServices.ShowToastAlert("Operación exitosa", "El servicio se ha creado correctamente. Se actualizará la lista en breve.", SweetAlertIcon.Success);
             }
         }
-        private async Task OpenEditDialogForm(string title, BillingServiceModel billingService)
+        private async Task OpenEditDialogForm(BillingServiceModel billingService)
         {
-            var dialogResult = await DialogService!.OpenAsync<ServiceForm>(title,
+            var dialogResult = await DialogService!.OpenSideAsync<ServiceForm>("Modificar información del servicio",
                       new Dictionary<string, object>
                       {
                            { "FormMode", FormModeEnum.EDIT },
                            { "BillingServiceParameter", billingService }
                       },
-                      new DialogOptions
+                      new SideDialogOptions
                       {
-                          Width = "auto",
+                          CloseDialogOnOverlayClick = true,
+                          Position = DialogPosition.Right,
+                          ShowMask = false
                       });
 
             var isLoad = dialogResult == null ? false : true;
